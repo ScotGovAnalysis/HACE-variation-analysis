@@ -1,4 +1,24 @@
 ## Formatting publication tables ##
+# Specify what columns to be treated as numeric #
+numeric_cols <- c(
+  "Number of Responses",
+  "Percentage",
+  "Lower 95% Confidence Interval",
+  "Upper 95% Confidence Interval"
+)
+
+#function made to sort columns to correct type
+clean_types <- function(df) {
+  num_cols_present <- intersect(names(df), numeric_cols)
+  
+  df |>
+    mutate(
+      # Convert specified columns to numeric
+      across(all_of(num_cols_present), as.numeric),
+      # Convert all columns not specified as numeric to be factors
+      across(-all_of(num_cols_present), as.factor)
+    )
+}
 
 data_list_demographics <- file_path_demographics |>
   # Get the sheet names from the published workbook
@@ -27,28 +47,7 @@ data_list_geographies <- file_path_geographies |>
   list2env(data_list_geographies, envir = .GlobalEnv)
 
 
-
-# Specify what columns to be treated as numeric #
-numeric_cols <- c(
-  "Number of Responses",
-  "Percentage",
-  "Lower 95% Confidence Interval",
-  "Upper 95% Confidence Interval"
-)
-
-clean_types <- function(df) {
-  num_cols_present <- intersect(names(df), numeric_cols)
-  
-  df |>
-    mutate(
-      # Convert specified columns to numeric
-      across(all_of(num_cols_present), as.numeric),
-      # Convert all columns not specified as numeric to be factors
-      across(-all_of(num_cols_present), as.factor)
-    )
-}
-
-#Check the conversion has worked
+#Check the variables are correct type
 glimpse(HSCP)
 glimpse(SIMD)
 
