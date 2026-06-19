@@ -27,6 +27,7 @@ data_list_geographies <- file_path_geographies |>
   list2env(data_list_geographies, envir = .GlobalEnv)
 
 
+
 # Specify what columns to be treated as numeric #
 numeric_cols <- c(
   "Number of Responses",
@@ -50,3 +51,4 @@ clean_types <- function(df) {
 #Check the conversion has worked
 glimpse(HSCP)
 glimpse(SIMD)
+
