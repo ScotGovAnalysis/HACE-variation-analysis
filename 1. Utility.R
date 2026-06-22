@@ -47,8 +47,8 @@ save_plot_with_script_name <- function(plot) {
   ggsave(
     filename = file.path(folder_name, paste0(safe_title, ".svg")),
     plot = plot,
-    width = 6.26,
-    height = 3.94
+    width = 10,
+    height = 6
   )
 }
 
@@ -61,7 +61,7 @@ make_histogram <- function(data,
   
   ggplot(data, aes(x = {{x_var}})) +
     geom_histogram(
-      binwidth = 3,
+      binwidth = 5,
       boundary = 0,
       colour = "white",
       linewidth = 0.4
@@ -79,7 +79,7 @@ make_histogram <- function(data,
     )
 }
 
-make_boxplot <- function(data, 
+make_boxplot_multiple_groups <- function(data, 
    x_var, 
    title,
    x_lab = x_lab,
@@ -96,6 +96,27 @@ make_boxplot <- function(data,
     theme(
       plot.title = element_text(hjust = 0.5) # centering the main title
     )
+}
+
+make_boxplot_single_group <- function(data, 
+                         x_var, 
+                         title,
+                         x_lab = x_lab,
+                         y_lab = y_lab) 
+{
+  ggplot(data, aes(x = {{x_var}})) +
+    geom_boxplot() +
+    scale_x_continuous(limits = c(0, 100)) +
+    labs(
+      title = title,
+      x = x_lab,
+      y = y_lab
+    )+
+    theme(
+      plot.title = element_text(hjust = 0.5), # centering the main title
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank()
+      )
 }
 
 make_scatter <- function(data, x_var, y_var, title,
