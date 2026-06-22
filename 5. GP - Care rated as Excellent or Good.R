@@ -22,7 +22,9 @@ sgplot::use_sgplot()
 
 #Source function to save plots from utility script
 source("1. Utility.R")
-
+#Load clean data from rds scripts
+data_list_demographics <- readRDS("Clean data/data_list_demographics_clean.rds")
+data_list_geographies <- readRDS("Clean data/data_list_geographies_clean.rds")
 
 # Summary table showing the percentage of respondents who rated the overall care 
 # from their General Practice as positive (“Excellent” or “Good”)
@@ -32,141 +34,117 @@ overall_care_GP <- `GP Practice` %>%
     `Response Option` =="positive") %>%
   # Group the data by GP Practice so calculations are done per practice
   group_by(`GP Practice name`) %>%
-  summarise(Percentage = sum(Percentage, na.rm = TRUE), .groups = "drop") %>%
+  summarise(percentage_overall_care_GP = sum(Percentage, na.rm = TRUE), 
+            .groups = "drop") %>%
   # For each GP practice, sum the percentages of the selected response options
-  arrange(Percentage) %>%
+  arrange(percentage_overall_care_GP) %>%
   # Order practices by % respondents positive, lowest to highest
   mutate(order = row_number())
 
-# Boxplot
-overall_care_GP_boxplot <- ggplot(overall_care_GP, aes(x = Percentage)) +
-  geom_boxplot() +
-  scale_x_continuous(limits = c(0, 100)) +
-  labs(
-    title = str_wrap("The percentage of respondents who rated the overall care from their General Practice as positive by GP practice",
-                     width = 60
-                     ),
-    x = "Percentage (%)",
-    y = ""
-  )
+#Scatterplot by GP practice
+overall_care_GP_scatterplot <- make_scatter(
+  data = overall_care_GP,
+  x_var = order, 
+  y_var = percentage_overall_care_GP, 
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by GP practice",
+    width = 60
+  ),
+  x_lab = "GP practice",
+  y_lab = "Percentage (%)"
+)
+overall_care_GP_scatterplot
+# Save plot to working directory
+save_plot_with_script_name(overall_care_GP_scatterplot)
+
+# Boxplot by GP practice
+overall_care_GP_boxplot <- make_boxplot_single_group(
+  data = overall_care_GP,
+  x_var = percentage_overall_care_GP,
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by GP practice",
+    width = 60
+  ),
+  x_lab = "Percentage (%)",
+  y_lab = ""
+)
 overall_care_GP_boxplot
+# Save plot to working directory
 save_plot_with_script_name(overall_care_GP_boxplot)
 
 ## Histogram ##
-overall_care_GP_histogram <- ggplot(overall_care_GP, aes(x = Percentage)) +
-  geom_histogram(
-    binwidth = 3,
-    boundary = 0,
-    colour = "white",   #outlines for bins
-    linewidth = 0.4
-  ) +
-  geom_density(
-    alpha = 0.2
-  ) +
-  scale_x_continuous(limits = c(0, 100)) +
-  labs(
-    title = str_wrap(
-      "The percentage of respondents who rated the overall care from their General Practice as positive by GP practice",
-      width = 60
-    ),
-    x = "Percentage (%) of respondents who rated the overall care from their General Practice as positive",
-    y = "Number of GP Practices"
-  )+
-  theme(axis.title.y = element_text(angle = 90), #rotating Y axis title
-        plot.title = element_text(hjust = 0.5) # centering the main title
-  )
-
+overall_care_GP_histogram <- make_histogram(
+  data = overall_care_GP,
+  x_var = percentage_overall_care_GP,
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by GP practice",
+    width = 60
+  ),
+  x_lab = "Percentage (%) of respondents who rated the overall care from their General Practice as positive",
+  y_lab = "Number of GP practices")
 overall_care_GP_histogram
 
 # Saves plot to working directory
 save_plot_with_script_name(overall_care_GP_histogram)
 
-overall_care_GP_scattlerplot <- ggplot(overall_care_GP,
-  aes(x = order, y = Percentage)) +
-  geom_point(size = 2.5) +
-  scale_y_continuous(limits = c(0, 100)) +
-  labs(
-    title = str_wrap(
-      "The percentage of respondents needing urgent care seen within 2 working days by GP Practice",
-      width = 60
-    ),
-    x = "GP Practice (ordered from lowest to highest)",
-    y = "Percentage (%)"
-  )+
-  theme(axis.title.y = element_text(angle = 90), #rotating Y axis title
-        plot.title = element_text(hjust = 0.5) # centering the main title
-  )
-overall_care_GP_scattlerplot
-save_plot_with_script_name(overall_care_GP_scattlerplot)
-
 #------------------------------------------------------------------------------#
-## By GP Cluster 
 
+## By GP cluster 
 overall_care_cluster <- `GP Cluster` %>%
   filter(
     `Question Number` == "q13",
-    `Response Option` == "positive"
-  ) %>%
-  arrange(Percentage) %>%
+    `Response Option` =="positive") %>%
+  # Group the data by GP cluster so calculations are done per practice
+  group_by(`Area`) %>%
+  summarise(percentage_overall_care_cluster = sum(Percentage, na.rm = TRUE), 
+            .groups = "drop") %>%
+  # For each GP practice, sum the percentages of the selected response options
+  arrange(percentage_overall_care_cluster) %>%
+  # Order practices by % respondents positive, lowest to highest
   mutate(order = row_number())
 
-# Boxplot
-overall_care_cluster_boxplot <- ggplot(overall_care_cluster, aes(x = Percentage)) +
-  geom_boxplot() +
-  scale_x_continuous(limits = c(0, 100)) +
-  labs(
-    title = str_wrap("The percentage of respondents who rated the overall care from their General Practice as positive by GP cluster",
-                     width = 60
-    ),
-    x = "Percentage (%)",
-    y = ""
-  )
+
+# Boxplot by GP cluster
+overall_care_cluster_boxplot <- make_boxplot_single_group(
+  data = overall_care_cluster,
+  x_var = percentage_overall_care_cluster,
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by GP cluster",
+    width = 60
+  ),
+  x_lab = "Percentage (%)",
+  y_lab = ""
+)
 overall_care_cluster_boxplot
+# Save to working directory
 save_plot_with_script_name(overall_care_cluster_boxplot)
 
-## Histogram ##
-overall_care_cluster_histogram <- ggplot(overall_care_cluster, aes(x = Percentage)) +
-  geom_histogram(
-    binwidth = 3,
-    boundary = 0,
-    colour = "white",   #outlines for bins
-    linewidth = 0.4
-  ) +
-  geom_density(
-    alpha = 0.2
-  ) +
-  scale_x_continuous(limits = c(0, 100)) +
-  labs(
-    title = str_wrap(
-      "The percentage of respondents who rated the overall care from their General Practice as positive by GP cluster",
-      width = 60
-    ),
-    x = "Percentage (%) of respondents who rated the overall care from their General Practice as positive",
-    y = "Number of GP Practices"
-  )+
-  theme(axis.title.y = element_text(angle = 90), #rotating Y axis title
-        plot.title = element_text(hjust = 0.5) # centering the main title
-  )
-
+## Histogram by cluster ##
+overall_care_cluster_histogram <- make_histogram(
+  data = overall_care_cluster,
+  x_var = percentage_overall_care_cluster,
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by GP cluster",
+    width = 60
+  ),
+  x_lab = "Percentage (%) of respondents who rated the overall care from their General Practice as positive",
+  y_lab = "Number of GP clusters")
 overall_care_cluster_histogram
-
-# Saves plot to working directory
+# Save plot to working directory
 save_plot_with_script_name(overall_care_cluster_histogram)
 
-overall_care_cluster_scattlerplot <- ggplot(overall_care_cluster,
-       aes(x = order, y = Percentage)) +
-  geom_point(size = 2.5) +
-  scale_y_continuous(limits = c(0, 100)) +
-  labs(
-    title = str_wrap(
-      "The percentage of respondents needing urgent care seen within 2 working days by GP cluster",
-      width = 60
-    ),
-    x = "GP Clusters (ordered from lowest to highest)",
-    y = "Percentage (%)"
-  )+
-  theme(axis.title.y = element_text(angle = 90), #rotating Y axis title
-        plot.title = element_text(hjust = 0.5) # centering the main title
-  )
-overall_care_cluster_scattlerplot
-save_plot_with_script_name(overall_care_cluster_scattlerplot)
+#Scatterplot by GP cluster
+overall_care_cluster_scatterplot <- make_scatter(
+  data = overall_care_cluster,
+  x_var = order, 
+  y_var = percentage_overall_care_cluster, 
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by GP cluster",
+    width = 60
+  ),
+  x_lab = "GP cluster",
+  y_lab = "Percentage (%)"
+)
+overall_care_cluster_scatterplot
+# Save plot to working directory
+save_plot_with_script_name(overall_care_cluster_scatterplot)
