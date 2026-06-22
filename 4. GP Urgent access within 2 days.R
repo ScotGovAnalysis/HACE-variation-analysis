@@ -23,6 +23,9 @@ sgplot::use_sgplot()
 
 #Source function to save plots from utility script
 source("1. Utility.R")
+#Load clean data from rds scripts
+data_list_demographics <- readRDS("Clean data/data_list_demographics_clean.rds")
+data_list_geographies <- readRDS("Clean data/data_list_geographies_clean.rds")
 
 
 # Summary table showing the percentage of respondents who saw or spoke to a doctor
@@ -61,7 +64,7 @@ within_2_days_GP_scatterplot
 save_plot_with_script_name(within_2_days_GP_scatterplot)
 
 #Boxplot
-within_2_days_GP_boxplot <- make_boxplot(
+within_2_days_GP_boxplot <- make_boxplot_single_group(
     data = within_2_days_GP, 
     x_var = percentage_within_2_days, 
     title= str_wrap(
@@ -125,7 +128,7 @@ within_2_days_cluster_scatterplot
 save_plot_with_script_name(within_2_days_cluster_scatterplot)
 
 #Boxplot
-within_2_days_cluster_boxplot <- make_boxplot(
+within_2_days_cluster_boxplot <- make_boxplot_single_group(
   data = within_2_days_cluster, 
   x_var = percentage_within_2_days, 
   title= str_wrap(
