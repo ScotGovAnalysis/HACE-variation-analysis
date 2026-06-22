@@ -20,7 +20,7 @@ clean_types <- function(df) {
     )
 }
 
-data_list_demographics <- file_path_demographics |>
+data_list_demographics_clean <- file_path_demographics |>
   # Get the sheet names from the published workbook
   excel_sheets() |>
   #Read all the sheets in except the cover page, in this case its called background
@@ -32,9 +32,7 @@ data_list_demographics <- file_path_demographics |>
   #Unpack the list of data sets into the environment with same names as their tabs from the published workbook
   list2env(data_list_demographics, envir = .GlobalEnv)
 
-
-
-data_list_geographies <- file_path_geographies |>
+data_list_geographies_clean <- file_path_geographies |>
   # Get the sheet names from the published workbook
   excel_sheets() |>
   #Read all the sheets in except the cover page, in this case its called background
@@ -51,3 +49,7 @@ data_list_geographies <- file_path_geographies |>
 glimpse(HSCP)
 glimpse(SIMD)
 
+#If happy save as an .rds file
+dir.create("Clean data", showWarnings = FALSE, recursive = TRUE)
+saveRDS(data_list_demographics_clean, file = "Clean data/data_list_demographics_clean.rds")
+saveRDS(data_list_geographies_clean, file = "Clean data/data_list_geographies_clean.rds")
