@@ -29,8 +29,8 @@ save_plot_with_script_name <- function(plot) {
   
   plot_type <- if (any(grepl("GeomBoxplot", geom_classes))) {
     "Box plot of"
-  } else if (any(grepl("GeomBar|GeomRect", geom_classes))) {
-    "Histogram of"
+  } else if (any(grepl("GeomCol|GeomBar", geom_classes))) {
+    "Bar chart of"
   } else if (any(grepl("GeomPoint", geom_classes))) {
     "Scatter plot of"
   } else if (any(grepl("GeomLine", geom_classes))) {
@@ -51,7 +51,6 @@ save_plot_with_script_name <- function(plot) {
     height = 6
   )
 }
-
 # Function for creating histograms
 make_histogram <- function(data, 
                            x_var, 
@@ -79,22 +78,22 @@ make_histogram <- function(data,
     )
 }
 
-make_boxplot_multiple_groups <- function(data, 
-   x_var, 
-   title,
-   x_lab = x_lab,
-   y_lab = y_lab) 
-  {
-  ggplot(data, aes(x = {{x_var}})) +
+make_boxplot_multiple_groups <- function(data,
+                                         x_var,
+                                         y_var,
+                                         title,
+                                         x_lab = NULL,
+                                         y_lab = NULL) {
+  
+  ggplot(data, aes(x = {{x_var}}, y = {{y_var}})) +
     geom_boxplot() +
-    scale_x_continuous(limits = c(0, 100)) +
     labs(
       title = title,
       x = x_lab,
       y = y_lab
-    )+
+    ) +
     theme(
-      plot.title = element_text(hjust = 0.5) # centering the main title
+      plot.title = element_text(hjust = 0.5)
     )
 }
 
@@ -137,4 +136,25 @@ make_scatter <- function(data, x_var, y_var, title,
     )
 }
 
+make_barchart_multiple_groups <- function(data,
+                                          x_var,
+                                          y_var,
+                                          title,
+                                          x_lab = NULL,
+                                          y_lab = NULL) {
+  
+  ggplot(data, aes(x = {{x_var}}, y = {{y_var}})) +
+    geom_col() +
+    scale_y_continuous(limits = c(0, 100)) +
+    labs(
+      title = title,
+      x = x_lab,
+      y = y_lab
+    ) +
+    theme(
+      plot.title = element_text(hjust = 0.5),
+      axis.title.y = element_text(angle = 90),
+      legend.position = "none"
+    )
+}
 
