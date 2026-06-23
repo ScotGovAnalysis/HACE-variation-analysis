@@ -44,6 +44,42 @@ data_list_geographies_clean <- file_path_geographies |>
   #Unpack the list of data sets into the environment with same names as their tabs from the published workbook
   list2env(data_list_geographies, envir = .GlobalEnv)
 
+Scotland_characteristics_joined <- Scotland |> 
+  mutate(
+    "Sex"= "Scotland Total",
+    "Age Band" = "Scotland Total",
+    "Scottish Index of Multiple Deprivation Decile"= "Scotland Total",
+    "Urban-Rural 8-fold classification" = "Scotland Total"
+  )
+
+Age_band_joined <- bind_rows(
+  Scotland_characteristics_joined %>%
+    select(`Question Number`, `Question Text`, `Response Option`, `Age Band`, Percentage),
+  `Age Band` %>%
+    select(`Question Number`, `Question Text`, `Response Option`, `Age Band`, Percentage)
+)
+
+Sex_joined <- bind_rows(
+  Scotland_characteristics_joined %>%
+    select(`Question Number`, `Question Text`, `Response Option`, `Sex`, Percentage),
+  `Sex` %>%
+    select(`Question Number`, `Question Text`, `Response Option`, `Sex`, Percentage)
+)
+
+SIMD_joined <- bind_rows(
+  Scotland_characteristics_joined %>%
+    select(`Question Number`, `Question Text`, `Response Option`, `Scottish Index of Multiple Deprivation Decile`, Percentage),
+  `SIMD` %>%
+    select(`Question Number`, `Question Text`, `Response Option`, `Scottish Index of Multiple Deprivation Decile`, Percentage)
+)
+
+Urban_Rural_8_joined <- bind_rows(
+  Scotland_characteristics_joined %>%
+    select(`Question Number`, `Question Text`, `Response Option`, `Urban-Rural 8-fold classification`, Percentage),
+  `Urban-Rural 8` %>%
+    select(`Question Number`, `Question Text`, `Response Option`, `Urban-Rural 8-fold classification`, Percentage)
+)
+
 
 #Check the variables are correct type
 glimpse(HSCP)
