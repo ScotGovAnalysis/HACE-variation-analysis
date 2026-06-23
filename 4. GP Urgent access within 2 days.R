@@ -154,3 +154,148 @@ within_2_days_cluster_histogram <- make_histogram(
 within_2_days_cluster_histogram
 
 save_plot_with_script_name(within_2_days_cluster_histogram)
+
+##-----------------------------------------------------------------------------#
+# Barchart of Scotland average answer by sex #
+within_2_days_responses <- c(
+  "I saw or spoke to a doctor or nurse on the same day",
+  "I saw or spoke to a doctor or nurse within 1 or 2 working days"
+)
+
+within_2_days_by_sex <- Sex %>%
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% c(
+      "I saw or spoke to a doctor or nurse on the same day",
+      "I saw or spoke to a doctor or nurse within 1 or 2 working days"
+    )
+  ) %>%
+  # Group the data by GP Practice so calculations are done per practice
+  group_by(`Sex`) %>%
+  # For each GP practice, sum the percentages of the selected response options
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "Had urgent access within 2 days",
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+within_2_days_scotland <- Scotland |> 
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% c(
+      "I saw or spoke to a doctor or nurse on the same day",
+      "I saw or spoke to a doctor or nurse within 1 or 2 working days"
+    )
+  ) |> 
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "Had urgent access within 2 days",
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(Sex = "Scotland Total")
+  
+
+within_2_days_scotland_by_sex <- bind_rows(
+  within_2_days_by_sex %>%
+    select(`Question Number`, `Question Text`, `Response Option`, Sex, percentage_within_2_days),
+  within_2_days_scotland %>%
+    select(`Question Number`, `Question Text`, `Response Option`, Sex, percentage_within_2_days)
+)
+
+within_2_days_scotland_by_sex_barchart <- make_barchart_multiple_groups(
+  data = within_2_days_scotland_by_sex,
+  x_var = Sex,
+  y_var = percentage_within_2_days,
+  title = str_wrap(
+    "The percentage of respondents needing urgent care seen within 2 working days by Sex",
+    width = 60
+  ), 
+  x_lab = "Sex", 
+  y_lab = "Percentage (%)"
+)
+within_2_days_scotland_by_sex_barchart
+save_plot_with_script_name(within_2_days_scotland_by_sex_barchart)
+
+##-----------------------------------------------------------------------------#
+# Barchart of Scotland average answer by Age band #
+within_2_days_responses <- c(
+  "I saw or spoke to a doctor or nurse on the same day",
+  "I saw or spoke to a doctor or nurse within 1 or 2 working days"
+)
+
+within_2_days_by_Age <- `Age Band` %>%
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) %>%
+  # Group the data by GP Practice so calculations are done per practice
+  group_by(`Age Band`) %>%
+  # For each GP practice, sum the percentages of the selected response options
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "Had urgent access within 2 days",
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+within_2_days_scotland <- Scotland |> 
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) |> 
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "Had urgent access within 2 days",
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  mutate(`Age Band` = "Scotland Total")
+
+
+within_2_days_scotland_by_age <- bind_rows(
+  within_2_days_by_Age %>%
+    select(`Question Number`, `Question Text`, `Response Option`, `Age Band`, percentage_within_2_days),
+  within_2_days_scotland %>%
+    select(`Question Number`, `Question Text`, `Response Option`, `Age Band`, percentage_within_2_days)
+) %>%
+  filter(`Age Band` != "Scotland Total")
+
+scotland_total <- within_2_days_scotland$percentage_within_2_days
+
+within_2_days_scotland_by_age_barchart <- make_barchart_multiple_groups(
+  data = within_2_days_scotland_by_age,
+  x_var = `Age Band`,
+  y_var = percentage_within_2_days,
+  title = str_wrap(
+    "The percentage of respondents needing urgent care seen within 2 working days by age band",
+    width = 60
+  ), 
+  x_lab = "Age", 
+  y_lab = "Percentage (%)"
+)+
+  geom_hline(
+    yintercept = scotland_total,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = scotland_total,
+    label = paste0("Scottish average: ", round(scotland_total, 1), "%"),
+    hjust = 1,
+    colour = "red"
+  ) +
+  coord_cartesian(clip = "off")
+
+
+within_2_days_scotland_by_age_barchart
+save_plot_with_script_name(within_2_days_scotland_by_age_barchart)
