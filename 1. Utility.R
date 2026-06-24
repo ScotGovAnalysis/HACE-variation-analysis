@@ -14,6 +14,11 @@ library(ggplot2)
 file_path_demographics <- "Setup documents - to be deleted once storage location decided/HACE+2025+-+2026+-+All+results+by+Demographic+Characteristic.xlsx"
 file_path_geographies <- "Setup documents - to be deleted once storage location decided/HACE+2025+-+2026+-+All+results+by+Geography.xlsx"
 
+within_2_days_responses <- c(
+  "I saw or spoke to a doctor or nurse on the same day",
+  "I saw or spoke to a doctor or nurse within 1 or 2 working days"
+)
+
 # Function that will create folders for the plots and save them to the working directory
 save_plot_with_script_name <- function(plot) {
   
