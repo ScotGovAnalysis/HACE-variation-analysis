@@ -223,15 +223,10 @@ save_plot_with_script_name(within_2_days_scotland_by_sex_barchart)
 
 ##-----------------------------------------------------------------------------#
 # Barchart of Scotland average answer by Age band #
-within_2_days_responses <- c(
-  "I saw or spoke to a doctor or nurse on the same day",
-  "I saw or spoke to a doctor or nurse within 1 or 2 working days"
-)
-
-within_2_days_by_Age <- `Age Band` %>%
+within_2_days_scotland_by_age <- Age_band_joined %>%
   filter(
     `Question Number` == "q10",
-    `Response Option` %in% within_2_days_responses
+    `Response Option` %in% within_2_days_responses # Detailed in the utility script
   ) %>%
   # Group the data by GP Practice so calculations are done per practice
   group_by(`Age Band`) %>%
@@ -244,54 +239,34 @@ within_2_days_by_Age <- `Age Band` %>%
     .groups = "drop"
   )
 
-
-within_2_days_scotland <- Scotland |> 
-  filter(
-    `Question Number` == "q10",
-    `Response Option` %in% within_2_days_responses
-  ) |> 
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "Had urgent access within 2 days",
-    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  ) |> 
-  mutate(`Age Band` = "Scotland Total")
-
-
-within_2_days_scotland_by_age <- bind_rows(
-  within_2_days_by_Age %>%
-    select(`Question Number`, `Question Text`, `Response Option`, `Age Band`, percentage_within_2_days),
-  within_2_days_scotland %>%
-    select(`Question Number`, `Question Text`, `Response Option`, `Age Band`, percentage_within_2_days)
-) %>%
-  filter(`Age Band` != "Scotland Total")
-
-scotland_total <- within_2_days_scotland$percentage_within_2_days
+scotland_total_age <- within_2_days_scotland_by_age %>% 
+  filter(`Age Band` == "Scotland Total") %>%
+  pull(percentage_within_2_days)
 
 within_2_days_scotland_by_age_barchart <- make_barchart_multiple_groups(
-  data = within_2_days_scotland_by_age,
+  data = within_2_days_scotland_by_age %>% 
+    filter(`Age Band` != "Scotland Total"),
   x_var = `Age Band`,
   y_var = percentage_within_2_days,
   title = str_wrap(
     "The percentage of respondents needing urgent care seen within 2 working days by age band",
     width = 60
   ), 
-  x_lab = "Age", 
+  x_lab = "Age Band", 
   y_lab = "Percentage (%)"
 )+
   geom_hline(
-    yintercept = scotland_total,
+    yintercept = scotland_total_age,
     linetype = "dashed",
     colour = "red"
   )+
   annotate(
     "text",
     x = Inf,
-    y = scotland_total,
-    label = paste0("Scottish average: ", round(scotland_total, 1), "%"),
+    y = scotland_total_age,
+    label = paste0("Scottish average: ", round(scotland_total_age, 1), "%"),
     hjust = 1,
+    vjust = -3, 
     colour = "red"
   ) +
   coord_cartesian(clip = "off")
@@ -299,3 +274,123 @@ within_2_days_scotland_by_age_barchart <- make_barchart_multiple_groups(
 
 within_2_days_scotland_by_age_barchart
 save_plot_with_script_name(within_2_days_scotland_by_age_barchart)
+
+##----------------------------------------------------------------------------#
+## Access within two days by SIMD ##
+
+# Barchart of Scotland average answer by Age band #
+within_2_days_scotland_by_SIMD <-  SIMD_joined %>% 
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) %>%
+  group_by(`Scottish Index of Multiple Deprivation Decile`) %>%
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "Had urgent access within 2 days",
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+scotland_total_SIMD <- within_2_days_scotland_by_SIMD %>% 
+  filter(`Scottish Index of Multiple Deprivation Decile` == "Scotland Total") %>%
+  pull(percentage_within_2_days)
+
+within_2_days_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
+  data = within_2_days_scotland_by_SIMD %>% 
+    filter(`Scottish Index of Multiple Deprivation Decile`!= "Scotland Total"),
+  x_var = reorder(
+      `Scottish Index of Multiple Deprivation Decile`,
+      as.numeric(sub("^([0-9]+).*", "\\1",
+                     `Scottish Index of Multiple Deprivation Decile`))
+  ),
+  y_var = percentage_within_2_days,
+  title = str_wrap(
+    "The percentage of respondents needing urgent care seen within 2 working days by SIMD decile",
+    width = 60
+  ), 
+  x_lab = "SIMD", 
+  y_lab = "Percentage (%)"
+  )+
+  geom_hline(
+    yintercept = scotland_total_SIMD,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = scotland_total_SIMD,
+    label = paste0("Scottish average: ", round(scotland_total_SIMD, 1), "%"),
+    hjust = 1,
+    vjust = -1,
+    colour = "red"
+  ) +
+  coord_cartesian(clip = "off")
+
+
+within_2_days_scotland_by_SIMD_barchart
+save_plot_with_script_name(within_2_days_scotland_by_SIMD_barchart)
+
+##----------------------------------------------------------------------------#
+## Access within two days by Urban 8 ##
+
+# Barchart of Scotland average answer by Age band #
+within_2_days_scotland_by_urban <- Urban_Rural_8_joined %>% 
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) %>%
+  group_by(`Urban-Rural 8-fold classification`) %>%
+  mutate(
+    `Urban-Rural 8-fold classification` =
+      ifelse(
+        grepl("^[2-7] ", `Urban-Rural 8-fold classification`),
+        sub("^([2-7]).*", "\\1", `Urban-Rural 8-fold classification`),
+        `Urban-Rural 8-fold classification`
+      )) %>% 
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "Had urgent access within 2 days",
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+scotland_total_urban <- within_2_days_scotland_by_urban %>% 
+  filter(`Urban-Rural 8-fold classification` == "Scotland Total") %>%
+  pull(percentage_within_2_days)
+
+within_2_days_scotland_by_urban_barchart <- make_barchart_multiple_groups(
+  data = within_2_days_scotland_by_urban %>% 
+    filter(`Urban-Rural 8-fold classification`!= "Scotland Total"),
+  x_var = `Urban-Rural 8-fold classification`,
+  y_var = percentage_within_2_days,
+  title = str_wrap(
+    "The percentage of respondents needing urgent care seen within 2 working days by Urban-Rural 8-fold classification",
+    width = 60
+  ), 
+  x_lab = "Urban-Rural 8-fold classification", 
+  y_lab = "Percentage (%)"
+)+
+  geom_hline(
+    yintercept = scotland_total_urban,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = scotland_total_urban,
+    label = paste0("Scottish average: ", round(scotland_total_urban, 1), "%"),
+    hjust = 1,
+    vjust = -2,
+    colour = "red"
+  ) +
+  coord_cartesian(clip = "off")
+
+
+within_2_days_scotland_by_urban_barchart
+save_plot_with_script_name(within_2_days_scotland_by_urban_barchart)
+
