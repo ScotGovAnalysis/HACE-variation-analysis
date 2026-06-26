@@ -68,9 +68,9 @@ Age_band_joined <- bind_rows(
 
 Sex_joined <- bind_rows(
   Scotland_characteristics_joined %>%
-    select(`Question Number`, `Question Text`, `Response Option`, `Sex`, Percentage),
+    select(`Question Number`, `Question Text`, `Response Option`, `Sex`, Percentage,`Number of Responses`),
   `Sex` %>%
-    select(`Question Number`, `Question Text`, `Response Option`, `Sex`, Percentage)
+    select(`Question Number`, `Question Text`, `Response Option`, `Sex`, Percentage,`Number of Responses`)
 )
 
 SIMD_joined <- bind_rows(
