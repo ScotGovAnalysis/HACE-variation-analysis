@@ -44,6 +44,18 @@ data_list_geographies_clean <- file_path_geographies |>
 
 list2env(data_list_geographies_clean, envir = .GlobalEnv)
 
+data_list_geographies_2023_clean <- file_path_geographies_2023 |>
+  # Get the sheet names from the published workbook
+  excel_sheets() |>
+  #Read all the sheets in except the cover page, in this case its called background
+  (\(sheets) sheets[sheets != "Background"])() |>
+  # Read all sheets from the published workbook into a named list
+  set_names() |>
+  map(\(sheet) read_excel(file_path_geographies_2023, sheet = sheet)) |> 
+  map(clean_types)
+
+list2env(data_list_geographies_2023_clean, envir = .GlobalEnv)
+
 Scotland_characteristics_joined <- Scotland |> 
   mutate(
     "Sex"= "Scotland Total",
@@ -93,3 +105,5 @@ glimpse(SIMD)
 glimpse(Scotland)
 glimpse(Ethnicity)
 glimpse(`Sexual Orientation`)
+
+
