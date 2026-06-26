@@ -150,7 +150,7 @@ make_barchart_multiple_groups <- function(data,
   
   ggplot(data, aes(x = {{x_var}}, y = {{y_var}})) +
     geom_col() +
-    scale_y_continuous(limits = c(0, 100)) +
+    scale_x_discrete(drop = FALSE) +
     labs(
       title = title,
       x = x_lab,
