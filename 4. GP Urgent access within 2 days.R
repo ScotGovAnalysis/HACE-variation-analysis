@@ -30,6 +30,17 @@ data_list_geographies <- readRDS("Clean data/data_list_geographies_clean.rds")
 
 # Summary table showing the percentage of respondents who saw or spoke to a doctor
 # or nurse within 2 working days
+within_2_days_scotland <- Scotland %>%
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) %>% 
+  summarise(
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pull(percentage_within_2_days)
+
 within_2_days_GP <- `GP Practice` %>%
   filter(
     `Question Number` == "q10",
@@ -131,29 +142,16 @@ within_2_days_GP_histogram
 save_plot_with_script_name(within_2_days_GP_histogram)
 
 ## Barchart of urgent access national level ------------------------------------
-scotland_total <- Scotland %>%
-  filter(
-    `Question Number` == "q10",
-    `Response Option` %in% within_2_days_responses)%>%
-  # For each GP practice, sum the percentages of the selected response options
-  summarise(
-    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )%>%
-  pull(percentage_within_2_days)
-
 
 bands <- paste0(seq(0, 90, 10), "-", seq(10, 100, 10))
 
-
 scotland_band <- cut(
-  scotland_total,
+  within_2_days_scotland,
   breaks = seq(0, 100, by = 10),
   labels = bands,
   include.lowest = TRUE,
   right = FALSE
 )
-
 
 within_2_days_GP_binned <- within_2_days_GP %>%
   mutate(
@@ -167,12 +165,11 @@ within_2_days_GP_binned <- within_2_days_GP %>%
   ) %>%
   count(pct_band, name = "n_practices") %>%
   complete(pct_band = bands, fill = list(n_practices = 0)) %>%
-  mutate(pct_band = factor(pct_band, levels = bands))  # ensures ordering
+  mutate(pct_band = factor(pct_band, levels = bands))
 
 scotland_y <- within_2_days_GP_binned %>%
   filter(pct_band == scotland_band) %>%
   pull(n_practices)
-
 
 within_2_days_GP_barchart <- make_barchart_multiple_groups(
   data = within_2_days_GP_binned,
@@ -197,7 +194,7 @@ within_2_days_GP_barchart <- make_barchart_multiple_groups(
     "text",
     x = scotland_band,
     y = scotland_y,
-    label = paste0("Scottish average ", round(scotland_total, 0), "%"),
+    label = paste0("Scottish average ", round(within_2_days_scotland, 0), "%"),
     vjust = -0.8,
     colour = "red",
     fontface = "bold"
@@ -250,7 +247,7 @@ within_2_days_cluster_barchart <- make_barchart_multiple_groups(
     "text",
     x = scotland_band,
     y = scotland_y,
-    label = paste0("Scottish average ", round(scotland_total, 0), "%"),
+    label = paste0("Scottish average ", round(within_2_days_scotland, 0), "%"),
     vjust = -0.8,
     colour = "red",
     fontface = "bold"
@@ -304,7 +301,7 @@ within_2_days_HSCP_barchart <- make_barchart_multiple_groups(
     "text",
     x = scotland_band,
     y = scotland_y,
-    label = paste0("Scottish average ", round(scotland_total, 0), "%"),
+    label = paste0("Scottish average ", round(within_2_days_scotland, 0), "%"),
     vjust = -0.8,
     colour = "red",
     fontface = "bold"
@@ -357,7 +354,7 @@ within_2_days_HB_barchart <- make_barchart_multiple_groups(
     "text",
     x = scotland_band,
     y = scotland_y,
-    label = paste0("Scottish average ", round(scotland_total, 0), "%"),
+    label = paste0("Scottish average ", round(within_2_days_scotland, 0), "%"),
     vjust = -0.8,
     colour = "red",
     fontface = "bold"
@@ -429,10 +426,6 @@ within_2_days_scotland_by_sex <- Sex_joined %>%
     .groups = "drop"
   )
 
-scotland_total_sex <- within_2_days_scotland_by_sex %>% 
-  filter(`Sex` == "Scotland Total") %>%
-  pull(percentage_within_2_days)
-
 within_2_days_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   data = within_2_days_scotland_by_sex %>% 
     filter(Sex != "Scotland Total"),
@@ -446,15 +439,15 @@ within_2_days_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   y_lab = "Percentage (%)"
 )+
   geom_hline(
-    yintercept = scotland_total_sex,
+    yintercept = within_2_days_scotland,
     linetype = "dashed",
     colour = "red"
   )+
   annotate(
     "text",
     x = Inf,
-    y = scotland_total_sex,
-    label = paste0("Scottish average: ", round(scotland_total_sex, 0), "%"),
+    y = within_2_days_scotland,
+    label = paste0("Scottish average: ", round(within_2_days_scotland, 0), "%"),
     hjust = 1,
     vjust = -1, 
     colour = "red"
@@ -462,6 +455,8 @@ within_2_days_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   coord_cartesian(clip = "off")
 within_2_days_scotland_by_sex_barchart
 save_plot_with_script_name(within_2_days_scotland_by_sex_barchart)
+
+
 
 ##-----------------------------------------------------------------------------#
 # Barchart of Scotland average answer by Age band #
@@ -481,10 +476,6 @@ within_2_days_scotland_by_age <- Age_band_joined %>%
     .groups = "drop"
   )
 
-scotland_total_age <- within_2_days_scotland_by_age %>% 
-  filter(`Age Band` == "Scotland Total") %>%
-  pull(percentage_within_2_days)
-
 within_2_days_scotland_by_age_barchart <- make_barchart_multiple_groups(
   data = within_2_days_scotland_by_age %>% 
     filter(`Age Band` != "Scotland Total"),
@@ -498,15 +489,15 @@ within_2_days_scotland_by_age_barchart <- make_barchart_multiple_groups(
   y_lab = "Percentage (%)"
 )+
   geom_hline(
-    yintercept = scotland_total_age,
+    yintercept = within_2_days_scotland,
     linetype = "dashed",
     colour = "red"
   )+
   annotate(
     "text",
     x = Inf,
-    y = scotland_total_age,
-    label = paste0("Scottish average: ", round(scotland_total_age, 1), "%"),
+    y = within_2_days_scotland,
+    label = paste0("Scottish average: ", round(within_2_days_scotland, 1), "%"),
     hjust = 1,
     vjust = -3, 
     colour = "red"
@@ -518,9 +509,7 @@ within_2_days_scotland_by_age_barchart
 save_plot_with_script_name(within_2_days_scotland_by_age_barchart)
 
 ##----------------------------------------------------------------------------#
-## Access within two days by SIMD ##
-
-# Barchart of Scotland average answer by Age band #
+## Barchart of Access within two days by SIMD ##
 within_2_days_scotland_by_SIMD <-  SIMD_joined %>% 
   filter(
     `Question Number` == "q10",
@@ -534,10 +523,6 @@ within_2_days_scotland_by_SIMD <-  SIMD_joined %>%
     percentage_within_2_days = sum(Percentage, na.rm = TRUE),
     .groups = "drop"
   )
-
-scotland_total_SIMD <- within_2_days_scotland_by_SIMD %>% 
-  filter(`Scottish Index of Multiple Deprivation Decile` == "Scotland Total") %>%
-  pull(percentage_within_2_days)
 
 within_2_days_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
   data = within_2_days_scotland_by_SIMD %>% 
@@ -556,15 +541,15 @@ within_2_days_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
   y_lab = "Percentage (%)"
   )+
   geom_hline(
-    yintercept = scotland_total_SIMD,
+    yintercept = within_2_days_scotland,
     linetype = "dashed",
     colour = "red"
   )+
   annotate(
     "text",
     x = Inf,
-    y = scotland_total_SIMD,
-    label = paste0("Scottish average: ", round(scotland_total_SIMD, 1), "%"),
+    y = within_2_days_scotland,
+    label = paste0("Scottish average: ", round(within_2_days_scotland, 1), "%"),
     hjust = 1,
     vjust = -1,
     colour = "red"
@@ -576,9 +561,7 @@ within_2_days_scotland_by_SIMD_barchart
 save_plot_with_script_name(within_2_days_scotland_by_SIMD_barchart)
 
 ##----------------------------------------------------------------------------#
-## Access within two days by Urban 8 ##
-
-# Barchart of Scotland average answer by Age band #
+## Barchart of Access within two days by Urban 8 ##
 within_2_days_scotland_by_urban <- Urban_Rural_8_joined %>% 
   filter(
     `Question Number` == "q10",
@@ -600,10 +583,6 @@ within_2_days_scotland_by_urban <- Urban_Rural_8_joined %>%
     .groups = "drop"
   )
 
-scotland_total_urban <- within_2_days_scotland_by_urban %>% 
-  filter(`Urban-Rural 8-fold classification` == "Scotland Total") %>%
-  pull(percentage_within_2_days)
-
 within_2_days_scotland_by_urban_barchart <- make_barchart_multiple_groups(
   data = within_2_days_scotland_by_urban %>% 
     filter(`Urban-Rural 8-fold classification`!= "Scotland Total"),
@@ -617,15 +596,15 @@ within_2_days_scotland_by_urban_barchart <- make_barchart_multiple_groups(
   y_lab = "Percentage (%)"
 )+
   geom_hline(
-    yintercept = scotland_total_urban,
+    yintercept = within_2_days_scotland,
     linetype = "dashed",
     colour = "red"
   )+
   annotate(
     "text",
     x = Inf,
-    y = scotland_total_urban,
-    label = paste0("Scottish average: ", round(scotland_total_urban, 1), "%"),
+    y = within_2_days_scotland,
+    label = paste0("Scottish average: ", round(within_2_days_scotland, 1), "%"),
     hjust = 1,
     vjust = -2,
     colour = "red"
@@ -636,59 +615,267 @@ within_2_days_scotland_by_urban_barchart <- make_barchart_multiple_groups(
 within_2_days_scotland_by_urban_barchart
 save_plot_with_script_name(within_2_days_scotland_by_urban_barchart)
 
-
-
-#------------------------------------------------------------------------------#
-#### Variation test ##
-variation_by_area <- HSCP %>%
+##----------------------------------------------------------------------------#
+##Barchart of Access within two days by Chronic Pain ##
+within_2_days_scotland_by_chronic_pain <- `Chronic Pain` %>% 
   filter(
     `Question Number` == "q10",
     `Response Option` %in% within_2_days_responses
   ) %>%
-  group_by(Area) %>%
+  group_by(`By Question Response Option`) %>%
   summarise(
-    sd_pct = sd(Percentage, na.rm = TRUE),
-    min_pct = min(Percentage, na.rm = TRUE),
-    max_pct = max(Percentage, na.rm = TRUE),
-    range_pct = max_pct - min_pct,
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "Had urgent access within 2 days",
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
     .groups = "drop"
-  ) %>%
-  arrange(desc(sd_pct))
-
-# Top 3
-variation_by_area %>%
-  slice_head(n = 3) %>%
-  pull(Area)
-
-# Bottom 3
-variation_by_area %>%
-  slice_tail(n = 3) %>%
-  pull(Area)
-
-variation <- bind_rows(
-  Top3 = variation_by_area %>% slice_head(n = 3),
-  Bottom3 = variation_by_area %>% slice_tail(n = 3),
-  .id = "Group"
-)
+  )
 
 
-selected_areas <- variation %>% pull(Area)
-
-ggplot(
-  HSCP %>%
-    filter(
-      `Question Number` == "q10",
-      `Response Option` %in% within_2_days_responses,
-      Area %in% selected_areas
-    ),
-  aes(x = reorder(Area, Percentage), y = Percentage)
-) +
-  geom_boxplot() +
-  coord_flip() +
-  labs(
-    title = "Top 3 and Bottom 3 Areas by Variation",
-    x = "Area",
-    y = "Percentage"
+within_2_days_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
+  data = within_2_days_scotland_by_chronic_pain %>% 
+    mutate(`By Question Response Option` = factor(
+      `By Question Response Option`,
+      levels = c("Yes", "No", "Skipped Q42")
+    )),
+  x_var = `By Question Response Option`,
+  y_var = percentage_within_2_days,
+  title = str_wrap(
+    "The percentage of respondents needing urgent care seen within 2 working days by Chronic pain",
+    width = 60
+  ), 
+  x_lab = "Do you suffer from chronic or persistent pain, that is pain that carries on for longer than 3 months despite medication or treatment?", 
+  y_lab = "Percentage (%)"
+)+
+  geom_hline(
+    yintercept = within_2_days_scotland,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = within_2_days_scotland,
+    label = paste0("Scottish average: ", round(within_2_days_scotland, 1), "%"),
+    hjust = 1,
+    vjust = -2,
+    colour = "red"
   ) +
-  theme_minimal()
+  coord_cartesian(clip = "off")
 
+
+within_2_days_scotland_by_chronic_pain_barchart
+save_plot_with_script_name(within_2_days_scotland_by_chronic_pain_barchart)
+
+## Access within two days by Long term condition ##
+# Barchart #
+within_2_days_scotland_by_long_term <- `Long-Term Condition` %>% 
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) %>%
+  group_by(`By Question Response Option`) %>%
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "Had urgent access within 2 days",
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+within_2_days_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
+  data = within_2_days_scotland_by_long_term %>% 
+    mutate(`By Question Response Option` = factor(
+      `By Question Response Option`,
+      levels = c("Yes", "No", "Skipped Question")
+    )),
+  x_var = `By Question Response Option`,
+  y_var = percentage_within_2_days,
+  title = str_wrap(
+    "The percentage of respondents needing urgent care seen within 2 working days by long term condition",
+    width = 60
+  ), 
+  x_lab = "Do you have any physical or mental health conditions or illnesses lasting or expected to last 12 months or more?", 
+  y_lab = "Percentage (%)"
+)+
+  geom_hline(
+    yintercept = within_2_days_scotland,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = within_2_days_scotland,
+    label = paste0("Scottish average: ", round(within_2_days_scotland, 1), "%"),
+    hjust = 1,
+    vjust = -2,
+    colour = "red"
+  ) +
+  coord_cartesian(clip = "off")
+
+
+within_2_days_scotland_by_long_term_barchart
+save_plot_with_script_name(within_2_days_scotland_by_long_term_barchart)
+
+## Access within two days by Sexual Orientation ##
+# Barchart #
+within_2_days_scotland_by_sexual_orientation <- `Sexual Orientation` %>% 
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) %>%
+  group_by(`By Question Response Option`) %>%
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "Had urgent access within 2 days",
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+within_2_days_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_groups(
+  data = within_2_days_scotland_by_sexual_orientation %>% 
+    mutate(`By Question Response Option` = 
+             forcats::fct_reorder(`By Question Response Option`,
+                                  percentage_within_2_days,
+                                  .desc = TRUE) %>%
+             forcats::fct_relevel("Skipped Q43", after = Inf)
+    ),
+  x_var = `By Question Response Option`,
+  y_var = percentage_within_2_days,
+  title = str_wrap(
+    "The percentage of respondents needing urgent care seen within 2 working days by sexual orientation",
+    width = 60
+  ), 
+  x_lab = "Which of the following best describes your sexual orientation?", 
+  y_lab = "Percentage (%)"
+)+
+  geom_hline(
+    yintercept = within_2_days_scotland,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = within_2_days_scotland,
+    label = paste0("Scottish average: ", round(within_2_days_scotland, 1), "%"),
+    hjust = 1,
+    vjust = -2,
+    colour = "red"
+  ) +
+  coord_cartesian(clip = "off")
+
+within_2_days_scotland_by_sexual_orientation_barchart
+save_plot_with_script_name(within_2_days_scotland_by_sexual_orientation_barchart)
+
+## Access within two days by Ethnicity ##
+# Barchart #
+within_2_days_scotland_by_ethnicity <- Ethnicity %>% 
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) %>%
+  group_by(`By Question Response Option`) %>%
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "Had urgent access within 2 days",
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+within_2_days_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
+  data = within_2_days_scotland_by_ethnicity %>% 
+    mutate(
+      `By Question Response Option` = 
+             forcats::fct_reorder(`By Question Response Option`,
+                                  percentage_within_2_days,
+                                  .desc = TRUE) %>%
+             forcats::fct_relevel("Skipped Q44", after = Inf)
+    ),
+  x_var = `By Question Response Option`,
+  y_var = percentage_within_2_days,
+  title = str_wrap(
+    "The percentage of respondents needing urgent care seen within 2 working days by ethnicity",
+    width = 60
+  ), 
+  x_lab = "What is your ethnic group?", 
+  y_lab = "Percentage (%)"
+)+
+  geom_hline(
+    yintercept = within_2_days_scotland,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = within_2_days_scotland,
+    label = paste0("Scottish average: ", round(within_2_days_scotland, 1), "%"),
+    hjust = 1,
+    vjust = -2,
+    colour = "red"
+  ) +
+  coord_cartesian(clip = "off")
+
+within_2_days_scotland_by_ethnicity_barchart
+save_plot_with_script_name(within_2_days_scotland_by_ethnicity_barchart)
+
+# #------------------------------------------------------------------------------#
+# #### Variation test ##
+# variation_by_area <- HSCP %>%
+#   filter(
+#     `Question Number` == "q10",
+#     `Response Option` %in% within_2_days_responses
+#   ) %>%
+#   group_by(Area) %>%
+#   summarise(
+#     sd_pct = sd(Percentage, na.rm = TRUE),
+#     min_pct = min(Percentage, na.rm = TRUE),
+#     max_pct = max(Percentage, na.rm = TRUE),
+#     range_pct = max_pct - min_pct,
+#     .groups = "drop"
+#   ) %>%
+#   arrange(desc(sd_pct))
+# 
+# # Top 3
+# variation_by_area %>%
+#   slice_head(n = 3) %>%
+#   pull(Area)
+# 
+# # Bottom 3
+# variation_by_area %>%
+#   slice_tail(n = 3) %>%
+#   pull(Area)
+# 
+# variation <- bind_rows(
+#   Top3 = variation_by_area %>% slice_head(n = 3),
+#   Bottom3 = variation_by_area %>% slice_tail(n = 3),
+#   .id = "Group"
+# )
+# 
+# 
+# selected_areas <- variation %>% pull(Area)
+# 
+# ggplot(
+#   HSCP %>%
+#     filter(
+#       `Question Number` == "q10",
+#       `Response Option` %in% within_2_days_responses,
+#       Area %in% selected_areas
+#     ),
+#   aes(x = reorder(Area, Percentage), y = Percentage)
+# ) +
+#   geom_boxplot() +
+#   coord_flip() +
+#   labs(
+#     title = "Top 3 and Bottom 3 Areas by Variation",
+#     x = "Area",
+#     y = "Percentage"
+#   ) +
+#   theme_minimal()
+# 
