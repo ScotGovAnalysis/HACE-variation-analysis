@@ -49,8 +49,15 @@ Scotland_characteristics_joined <- Scotland |>
     "Sex"= "Scotland Total",
     "Age Band" = "Scotland Total",
     "Scottish Index of Multiple Deprivation Decile"= "Scotland Total",
-    "Urban-Rural 8-fold classification" = "Scotland Total"
+    "Urban-Rural 8-fold classification" = "Scotland Total",
+    "By Question Text" = "Scotland Total",
+    "By Question Response Option" = "Scotland Total"
+  ) %>% 
+  mutate(
+    `By Question Text` = as.factor(`By Question Text`),
+    `By Question Response Option` = as.factor(`By Question Response Option`)
   )
+
 
 Age_band_joined <- bind_rows(
   Scotland_characteristics_joined %>%
@@ -80,12 +87,9 @@ Urban_Rural_8_joined <- bind_rows(
     select(`Question Number`, `Question Text`, `Response Option`, `Urban-Rural 8-fold classification`, Percentage)
 )
 
-
 #Check the variables are correct type
 glimpse(HSCP)
 glimpse(SIMD)
-
-#If happy save as an .rds file
-dir.create("Clean data", showWarnings = FALSE, recursive = TRUE)
-saveRDS(data_list_demographics_clean, file = "Clean data/data_list_demographics_clean.rds")
-saveRDS(data_list_geographies_clean, file = "Clean data/data_list_geographies_clean.rds")
+glimpse(Scotland)
+glimpse(Ethnicity_joined)
+glimpse(Sexual_Orientation_joined)
