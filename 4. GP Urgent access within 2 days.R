@@ -33,10 +33,7 @@ data_list_geographies <- readRDS("Clean data/data_list_geographies_clean.rds")
 within_2_days_GP <- `GP Practice` %>%
   filter(
     `Question Number` == "q10",
-    `Response Option` %in% c(
-      "I saw or spoke to a doctor or nurse on the same day",
-      "I saw or spoke to a doctor or nurse within 1 or 2 working days"
-    )
+    `Response Option` %in% within_2_days_responses
   ) %>%
   # Group the data by GP Practice so calculations are done per practice
   group_by(`GP Practice name`) %>%
@@ -90,6 +87,137 @@ within_2_days_GP_histogram
 
 # Saves plot to working directory
 save_plot_with_script_name(within_2_days_GP_histogram)
+
+## Barchart of urgent access national level ------------------------------------
+scotland_total <- Scotland %>%
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses)%>%
+  # For each GP practice, sum the percentages of the selected response options
+  summarise(
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )%>%
+  pull(percentage_within_2_days)
+
+
+bands <- paste0(seq(0, 90, 10), "-", seq(10, 100, 10))
+
+
+scotland_band <- cut(
+  scotland_total,
+  breaks = seq(0, 100, by = 10),
+  labels = bands,
+  include.lowest = TRUE,
+  right = FALSE
+)
+
+
+within_2_days_GP_binned <- within_2_days_GP %>%
+  mutate(
+    pct_band = cut(
+      percentage_within_2_days,
+      breaks = seq(0, 100, by = 10),
+      labels = bands,
+      include.lowest = TRUE,
+      right = FALSE
+    )
+  ) %>%
+  count(pct_band, name = "n_practices") %>%
+  complete(pct_band = bands, fill = list(n_practices = 0)) %>%
+  mutate(pct_band = factor(pct_band, levels = bands))  # ensures ordering
+
+scotland_y <- within_2_days_GP_binned %>%
+  filter(pct_band == scotland_band) %>%
+  pull(n_practices)
+
+
+within_2_days_GP_barchart <- make_barchart_multiple_groups(
+  data = within_2_days_GP_binned,
+  x_var = pct_band,
+  y_var = n_practices,
+  title = str_wrap(
+    "The percentage of respondents needing urgent care seen within 2 working days by GP practice",
+    width = 60
+  ),
+  x_lab = "Percentage (%)",
+  y_lab = "Number of GP practices")+
+  geom_point(
+    data = data.frame(
+      pct_band = scotland_band,
+      n_practices = 1
+    ),
+    aes(x = pct_band, y = scotland_y),
+    colour = "red",
+    size = 4
+  )+
+  geom_text(
+    aes(x = scotland_band, y = scotland_y),
+    label = paste0("Scottish average ",round(scotland_total, 0), "%"),
+    vjust = -0.8,
+    colour = "red",
+    fontface = "bold"
+  )
+
+within_2_days_GP_barchart
+
+# Saves plot to working directory
+save_plot_with_script_name(within_2_days_GP_barchart)
+
+
+#### Variation test ##
+variation_by_area <- HSCP %>%
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) %>%
+  group_by(Area) %>%
+  summarise(
+    sd_pct = sd(Percentage, na.rm = TRUE),
+    min_pct = min(Percentage, na.rm = TRUE),
+    max_pct = max(Percentage, na.rm = TRUE),
+    range_pct = max_pct - min_pct,
+    .groups = "drop"
+  ) %>%
+  arrange(desc(sd_pct))
+
+# Top 3
+variation_by_area %>%
+  slice_head(n = 3) %>%
+  pull(Area)
+
+# Bottom 3
+variation_by_area %>%
+  slice_tail(n = 3) %>%
+  pull(Area)
+
+variation <- bind_rows(
+  Top3 = variation_by_area %>% slice_head(n = 3),
+  Bottom3 = variation_by_area %>% slice_tail(n = 3),
+  .id = "Group"
+)
+
+
+selected_areas <- variation %>% pull(Area)
+
+ggplot(
+  HSCP %>%
+    filter(
+      `Question Number` == "q10",
+      `Response Option` %in% within_2_days_responses,
+      Area %in% selected_areas
+    ),
+  aes(x = reorder(Area, Percentage), y = Percentage)
+) +
+  geom_boxplot() +
+  coord_flip() +
+  labs(
+    title = "Top 3 and Bottom 3 Areas by Variation",
+    x = "Area",
+    y = "Percentage"
+  ) +
+  theme_minimal()
+
 
 #------------------------------------------------------------------------------#
 ## By GP Cluster 
