@@ -22,9 +22,6 @@ sgplot::use_sgplot()
 
 #Source function to save plots from utility script
 source("1. Utility.R")
-#Load clean data from rds scripts
-data_list_demographics <- readRDS("Clean data/data_list_demographics_clean.rds")
-data_list_geographies <- readRDS("Clean data/data_list_geographies_clean.rds")
 
 # Summary table showing the percentage of respondents who rated the overall care 
 # from their General Practice as positive (“Excellent” or “Good”)
@@ -440,6 +437,213 @@ overall_care_scotland_by_urban_barchart <- make_barchart_multiple_groups(
   coord_cartesian(clip = "off")
 overall_care_scotland_by_urban_barchart
 save_plot_with_script_name(overall_care_scotland_by_urban_barchart)
+
+##----------------------------------------------------------------------------#
+##Barchart by Chronic Pain ##
+overall_care_scotland_by_chronic_pain <- `Chronic Pain` %>% 
+  filter(
+    `Question Number` == "q13",
+    `Response Option` =="positive"
+  ) %>%
+  group_by(`By Question Response Option`) %>%
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "positive",
+    percentage_overall_care = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+overall_care_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
+  data = overall_care_scotland_by_chronic_pain %>% 
+    mutate(`By Question Response Option` = factor(
+      `By Question Response Option`,
+      levels = c("Yes", "No", "Skipped Q42")
+    )),
+  x_var = `By Question Response Option`,
+  y_var = percentage_overall_care,
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by Chronic pain",
+    width = 60
+  ), 
+  x_lab = "Do you suffer from chronic or persistent pain, that is pain that carries on for longer than 3 months despite medication or treatment?", 
+  y_lab = "Percentage (%)"
+)+
+  geom_hline(
+    yintercept = overall_care_scotland,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = overall_care_scotland,
+    label = paste0("Scottish average: ", round(overall_care_scotland, 1), "%"),
+    hjust = 1,
+    vjust = -2,
+    colour = "red"
+  ) +
+  coord_cartesian(clip = "off")
+
+
+overall_care_scotland_by_chronic_pain_barchart
+save_plot_with_script_name(overall_care_scotland_by_chronic_pain_barchart)
+
+##  Barchart by Long term condition ##
+overall_care_scotland_by_long_term <- `Long-Term Condition` %>% 
+  filter(
+    `Question Number` == "q13",
+    `Response Option` =="positive"
+  ) %>%
+  group_by(`By Question Response Option`) %>%
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "positive",
+    percentage_overall_care = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+overall_care_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
+  data = overall_care_scotland_by_long_term %>% 
+    mutate(`By Question Response Option` = factor(
+      `By Question Response Option`,
+      levels = c("Yes", "No", "Skipped Question")
+    )),
+  x_var = `By Question Response Option`,
+  y_var = percentage_overall_care,
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by long term condition",
+    width = 60
+  ), 
+  x_lab = "Do you have any physical or mental health conditions or illnesses lasting or expected to last 12 months or more?", 
+  y_lab = "Percentage (%)"
+)+
+  geom_hline(
+    yintercept = overall_care_scotland,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = overall_care_scotland,
+    label = paste0("Scottish average: ", round(overall_care_scotland, 1), "%"),
+    hjust = 1,
+    vjust = -2,
+    colour = "red"
+  ) +
+  coord_cartesian(clip = "off")
+
+
+overall_care_scotland_by_long_term_barchart
+save_plot_with_script_name(overall_care_scotland_by_long_term_barchart)
+
+## Barchart  by Sexual Orientation ##
+overall_care_scotland_by_sexual_orientation <- `Sexual Orientation` %>% 
+  filter(
+    `Question Number` == "q13",
+    `Response Option` =="positive"
+  ) %>%
+  group_by(`By Question Response Option`) %>%
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "positive",
+    percentage_overall_care = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+overall_care_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_groups(
+  data = overall_care_scotland_by_sexual_orientation %>% 
+    mutate(`By Question Response Option` = 
+             forcats::fct_reorder(`By Question Response Option`,
+                                  percentage_overall_care,
+                                  .desc = TRUE) %>%
+             forcats::fct_relevel("Skipped Q43", after = Inf)
+    ),
+  x_var = `By Question Response Option`,
+  y_var = percentage_overall_care,
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by sexual orientation",
+    width = 60
+  ), 
+  x_lab = "Which of the following best describes your sexual orientation?", 
+  y_lab = "Percentage (%)"
+)+
+  geom_hline(
+    yintercept = overall_care_scotland,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = overall_care_scotland,
+    label = paste0("Scottish average: ", round(overall_care_scotland, 1), "%"),
+    hjust = 1,
+    vjust = -2,
+    colour = "red"
+  ) +
+  coord_cartesian(clip = "off")
+
+overall_care_scotland_by_sexual_orientation_barchart
+save_plot_with_script_name(overall_care_scotland_by_sexual_orientation_barchart)
+
+## # Barchart by Ethnicity ##
+overall_care_scotland_by_ethnicity <- Ethnicity %>% 
+  filter(
+    `Question Number` == "q13",
+    `Response Option` =="positive"
+  ) %>%
+  group_by(`By Question Response Option`) %>%
+  summarise(
+    `Question Number` = first(`Question Number`),
+    `Question Text` = first(`Question Text`),
+    `Response Option` = "positive",
+    percentage_overall_care = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+overall_care_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
+  data = overall_care_scotland_by_ethnicity %>% 
+    mutate(
+      `By Question Response Option` = 
+        forcats::fct_reorder(`By Question Response Option`,
+                             percentage_overall_care,
+                             .desc = TRUE) %>%
+        forcats::fct_relevel("Skipped Q44", after = Inf)
+    ),
+  x_var = `By Question Response Option`,
+  y_var = percentage_overall_care,
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by ethnicity",
+    width = 60
+  ), 
+  x_lab = "What is your ethnic group?", 
+  y_lab = "Percentage (%)"
+)+
+  geom_hline(
+    yintercept = overall_care_scotland,
+    linetype = "dashed",
+    colour = "red"
+  )+
+  annotate(
+    "text",
+    x = Inf,
+    y = overall_care_scotland,
+    label = paste0("Scottish average: ", round(overall_care_scotland, 1), "%"),
+    hjust = 1,
+    vjust = -2,
+    colour = "red"
+  ) +
+  coord_cartesian(clip = "off")
+
+overall_care_scotland_by_ethnicity_barchart
+save_plot_with_script_name(overall_care_scotland_by_ethnicity_barchart)
 
 ##----------------------------------------------------------------------------#
 ################################################################################
