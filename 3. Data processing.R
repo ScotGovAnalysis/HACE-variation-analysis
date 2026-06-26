@@ -28,9 +28,9 @@ data_list_demographics_clean <- file_path_demographics |>
   # Read all sheets from the published workbook into a named list
   set_names() |>
   map(\(sheet) read_excel(file_path_demographics, sheet = sheet)) |> 
-  map(clean_types) |> 
-  #Unpack the list of data sets into the environment with same names as their tabs from the published workbook
-  list2env(data_list_demographics, envir = .GlobalEnv)
+  map(clean_types)
+
+list2env(data_list_demographics_clean, envir = .GlobalEnv)
 
 data_list_geographies_clean <- file_path_geographies |>
   # Get the sheet names from the published workbook
@@ -40,9 +40,9 @@ data_list_geographies_clean <- file_path_geographies |>
   # Read all sheets from the published workbook into a named list
   set_names() |>
   map(\(sheet) read_excel(file_path_geographies, sheet = sheet)) |> 
-  map(clean_types)  |> 
-  #Unpack the list of data sets into the environment with same names as their tabs from the published workbook
-  list2env(data_list_geographies, envir = .GlobalEnv)
+  map(clean_types)
+
+list2env(data_list_geographies_clean, envir = .GlobalEnv)
 
 Scotland_characteristics_joined <- Scotland |> 
   mutate(
