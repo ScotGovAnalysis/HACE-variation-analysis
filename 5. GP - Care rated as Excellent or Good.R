@@ -645,6 +645,14 @@ overall_care_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
 overall_care_scotland_by_ethnicity_barchart
 save_plot_with_script_name(overall_care_scotland_by_ethnicity_barchart)
 
+###############################################################################
+## Comparing to the last surveys results at Scotland level ##
+
+
+
+
+
+
 ##----------------------------------------------------------------------------#
 ################################################################################
 # Exploratory plots
