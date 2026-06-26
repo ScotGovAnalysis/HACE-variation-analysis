@@ -91,5 +91,5 @@ Urban_Rural_8_joined <- bind_rows(
 glimpse(HSCP)
 glimpse(SIMD)
 glimpse(Scotland)
-glimpse(Ethnicity_joined)
-glimpse(Sexual_Orientation_joined)
+glimpse(Ethnicity)
+glimpse(`Sexual Orientation`)
