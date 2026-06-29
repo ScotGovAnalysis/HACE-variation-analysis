@@ -12,8 +12,11 @@ library(ggplot2)
 # File path to the most recent years data #
 # TO BE UPDATED WHEN STORAGE LOCATION DECIDED #
 file_path_demographics <- "Setup documents - to be deleted once storage location decided/HACE+2025+-+2026+-+All+results+by+Demographic+Characteristic.xlsx"
-file_path_geographies <- "Setup documents - to be deleted once storage location decided/HACE+2025+-+2026+-+All+results+by+Geography.xlsx"
+file_path_geographies_2025 <- "Setup documents - to be deleted once storage location decided/HACE+2025+-+2026+-+All+results+by+Geography.xlsx"
 file_path_geographies_2023 <- "Setup documents - to be deleted once storage location decided/Health+and+Care+Experience+Survey+2023+to+2024+-tables+of+results+by+geography.xlsx"
+file_path_geographies_2021 <- "Setup documents - to be deleted once storage location decided/combined-pnn-info-questions-updated-25-10-22 (1).xlsx"
+
+
 
 within_2_days_responses <- c(
   "I saw or spoke to a doctor or nurse on the same day",
