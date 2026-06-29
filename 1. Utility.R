@@ -16,7 +16,7 @@ file_path_geographies_2025 <- "Setup documents - to be deleted once storage loca
 file_path_geographies_2023 <- "Setup documents - to be deleted once storage location decided/Health+and+Care+Experience+Survey+2023+to+2024+-tables+of+results+by+geography.xlsx"
 file_path_geographies_2021 <- "Setup documents - to be deleted once storage location decided/combined-pnn-info-questions-updated-25-10-22 (1).xlsx"
 
-
+SG_Practice_lookup <- readRDS("~/HSCA/HACE-variation-analysis/Setup documents - to be deleted once storage location decided/SG_Practice_lookup.rds")
 
 within_2_days_responses <- c(
   "I saw or spoke to a doctor or nurse on the same day",
