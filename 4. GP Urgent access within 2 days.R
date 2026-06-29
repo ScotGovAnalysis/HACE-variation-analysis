@@ -825,57 +825,101 @@ within_2_days_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
 within_2_days_scotland_by_ethnicity_barchart
 save_plot_with_script_name(within_2_days_scotland_by_ethnicity_barchart)
 
-# #------------------------------------------------------------------------------#
-# #### Variation test ##
-# variation_by_area <- HSCP %>%
-#   filter(
-#     `Question Number` == "q10",
-#     `Response Option` %in% within_2_days_responses
-#   ) %>%
-#   group_by(Area) %>%
-#   summarise(
-#     sd_pct = sd(Percentage, na.rm = TRUE),
-#     min_pct = min(Percentage, na.rm = TRUE),
-#     max_pct = max(Percentage, na.rm = TRUE),
-#     range_pct = max_pct - min_pct,
-#     .groups = "drop"
-#   ) %>%
-#   arrange(desc(sd_pct))
-# 
-# # Top 3
-# variation_by_area %>%
-#   slice_head(n = 3) %>%
-#   pull(Area)
-# 
-# # Bottom 3
-# variation_by_area %>%
-#   slice_tail(n = 3) %>%
-#   pull(Area)
-# 
-# variation <- bind_rows(
-#   Top3 = variation_by_area %>% slice_head(n = 3),
-#   Bottom3 = variation_by_area %>% slice_tail(n = 3),
-#   .id = "Group"
-# )
-# 
-# 
-# selected_areas <- variation %>% pull(Area)
-# 
-# ggplot(
-#   HSCP %>%
-#     filter(
-#       `Question Number` == "q10",
-#       `Response Option` %in% within_2_days_responses,
-#       Area %in% selected_areas
-#     ),
-#   aes(x = reorder(Area, Percentage), y = Percentage)
-# ) +
-#   geom_boxplot() +
-#   coord_flip() +
-#   labs(
-#     title = "Top 3 and Bottom 3 Areas by Variation",
-#     x = "Area",
-#     y = "Percentage"
-#   ) +
-#   theme_minimal()
-# 
+###############################################################################
+## Comparing to the last surveys results at Scotland level ##
+## Cleaning 2021 results
+within_2_days_scotland_2021 <- `Scotland - PNN Questions` %>% 
+  filter(
+    `Question Number` == "5"
+  )%>%
+  select(-c("Questionnaire Section", "Scotland"))%>% 
+  pivot_longer(
+    cols = starts_with("%"),
+    names_to = "Response Option",
+    values_to = "percentage_within_2_days"
+  ) %>%
+  mutate(
+    `Response Option` = gsub("% ", "", `Response Option`),
+    `Response Option` = tolower(`Response Option`),
+    "Year"= "2021",
+    percentage_within_2_days = as.numeric(as.character(percentage_within_2_days))
+  ) %>% 
+  filter(
+    `Response Option` == "positive"
+  )%>%
+  select(c("percentage_within_2_days","Year"))
+
+## Cleaning 2023 results
+within_2_days_scotland_2023 <- `Information Questions` %>%
+  filter(
+    `Geography Type` == "Scotland",
+    `Question Number` == "q10",
+    `Response Option Text` %in% within_2_days_responses
+  ) %>%
+  mutate(
+    `Percentage selecting this response option` =
+      as.numeric(as.character(`Percentage selecting this response option`))
+  ) %>%
+  summarise(
+    percentage_within_2_days = sum(`Percentage selecting this response option`, na.rm = TRUE),
+    .groups = "drop") %>% 
+  mutate(
+        percentage_within_2_days = percentage_within_2_days*100,
+        "Year"="2023"
+      )
+
+within_2_days_scotland_2025 <- Scotland %>%
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) %>% 
+  summarise(
+    percentage_within_2_days = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    "Year"="2025"
+  )
+
+within_2_days_scotland_timeseries <- bind_rows(
+  within_2_days_scotland_2021,
+  within_2_days_scotland_2023,
+  within_2_days_scotland_2025,
+  # 2019 & 2017 row
+  tibble(
+    percentage_within_2_days = c(
+      66, #2019
+      66), # 2017
+    `Year` = c("2019","2017")
+     )
+   )
+
+
+
+glimpse(within_2_days_scotland_timeseries)
+
+within_2_days_scotland_timeseries_barchart <- ggplot(
+  within_2_days_scotland_timeseries,
+  aes(x = percentage_within_2_days,
+      y = Year)) +
+  geom_col(width = 0.6) +
+  labs(
+    title = "Timeseries of the percentage of respondents needing urgent care seen within 2 working days",
+    x = "Percentage (%)",
+    y = "Year",
+    caption = "Note: 2021 was asked as a PNN question - this shows % responding positively, not necessarily within 2 days."
+  ) +
+  scale_x_continuous(labels = scales::percent_format(scale = 1))+
+  theme_minimal()+
+  geom_text(
+    aes(label = paste0(round(percentage_within_2_days, 0), "%")),
+    hjust = 2,
+    size = 3,
+    colour = "white"
+  )
+
+within_2_days_scotland_timeseries_barchart
+save_plot_with_script_name(within_2_days_scotland_timeseries_barchart)
+
+##----------------------------------------------------------------------------#
+

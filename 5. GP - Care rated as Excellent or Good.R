@@ -647,6 +647,23 @@ save_plot_with_script_name(overall_care_scotland_by_ethnicity_barchart)
 
 ###############################################################################
 ## Comparing to the last surveys results at Scotland level ##
+## Cleaning 2021 results
+overall_care_scotland_2021 <- `Scotland - PNN Questions` %>% 
+  filter(
+    `Question Number` == "10"
+  )%>%
+  select(-c("Questionnaire Section", "Scotland"))%>% 
+  pivot_longer(
+    cols = starts_with("%"),
+    names_to = "Response Option",
+    values_to = "Percentage"
+  ) %>%
+  mutate(
+    `Response Option` = gsub("% ", "", `Response Option`),
+    `Response Option` = tolower(`Response Option`),
+    "Year"= "2021",
+    Percentage = as.numeric(as.character(Percentage))
+  )
 
 ## Cleaning 2023 results
 overall_care_scotland_2023 <- `Positive, Neutral or Negative` %>% 
@@ -681,10 +698,22 @@ overall_care_scotland_2025 <- Scotland %>%
   select(-c("Topic", "Lower 95% Confidence Interval", "Upper 95% Confidence Interval"))
 
 overall_care_scotland_timeseries <- bind_rows(
+  overall_care_scotland_2021,
   overall_care_scotland_2023,
-  overall_care_scotland_2025 
-) %>% 
-  mutate(`Response Option` = as.factor(`Response Option`))
+  overall_care_scotland_2025,
+    # 2019 & 2017 row
+    tibble(
+      `Question Number` = rep("10",6),
+      `Question Text` = rep("Overall, how would you rate the care provided by your GP Practice?",6),
+      `Number of Responses` = c(rep(137249,3),rep(115006,3)),
+      `Response Option` = rep(c("positive", "neutral", "negative"),2),
+      `Percentage` = c(79,15,6, #2019
+                       83,13,5), #2017
+      `Year` = c(rep("2019",3), rep("2017",3))
+    )) %>%
+    mutate(`Response Option` = as.factor(`Response Option`))
+
+
 
 glimpse(overall_care_scotland_timeseries)
 

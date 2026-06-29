@@ -638,3 +638,87 @@ informed_choice_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
 
 informed_choice_scotland_by_ethnicity_barchart
 save_plot_with_script_name(informed_choice_scotland_by_ethnicity_barchart)
+
+###############################################################################
+## Comparing to the last surveys results at Scotland level ##
+## Cleaning 2021 results
+informed_choice_scotland_2021 <- `Scotland - PNN Questions` %>% 
+  filter(
+    `Question Number` == "13l"
+  )%>%
+  select(-c("Questionnaire Section", "Scotland"))%>% 
+  pivot_longer(
+    cols = starts_with("%"),
+    names_to = "Response Option",
+    values_to = "Percentage"
+  ) %>%
+  mutate(
+    `Response Option` = gsub("% ", "", `Response Option`),
+    `Response Option` = tolower(`Response Option`),
+    "Year"= "2021",
+    Percentage = as.numeric(as.character(Percentage))
+  )
+
+## Cleaning 2023 results
+informed_choice_scotland_2023 <- `Positive, Neutral or Negative` %>% 
+  filter(
+    `Geography Type` == "Scotland",
+    `Question Number` == "q16m"
+  )%>%
+  select(-c("...11","Geography Type","Area", "Area Name", "Survey Section",
+            "Lower 95% Confidence Interval - Percentage Positive", 
+            "Upper 95% Confidence Interval - Percentage Positive")
+  ) %>% 
+  pivot_longer(
+    cols = starts_with("Percentage"),
+    names_to = "Response Option",
+    values_to = "Percentage"
+  ) %>%
+  mutate(
+    `Response Option` = gsub("Percentage ", "", `Response Option`),
+    `Response Option` = tolower(`Response Option`),
+    "Year"= "2023",
+    Percentage = as.numeric(as.character(Percentage))
+  ) %>% 
+  mutate(Percentage = Percentage*100)
+
+informed_choice_scotland_2025 <- Scotland %>%
+  filter(
+    `Question Number` == "q16m"
+  ) %>% 
+  mutate(
+    "Year"="2025"
+  )%>% 
+  select(-c("Topic", "Lower 95% Confidence Interval", "Upper 95% Confidence Interval"))
+
+informed_choice_scotland_timeseries <- bind_rows(
+  informed_choice_scotland_2021,
+  informed_choice_scotland_2023,
+  informed_choice_scotland_2025,
+  ) %>%
+  mutate(`Response Option` = as.factor(`Response Option`))
+
+glimpse(informed_choice_scotland_timeseries)
+
+informed_choice_scotland_timeseries_barchart <- ggplot(informed_choice_scotland_timeseries,
+                                                    aes(x = Percentage,
+                                                        y = Year,
+                                                        fill = `Response Option`)) +
+  geom_col(position = "fill", width = 0.6) +
+  labs(
+    title = "Informed choice rating by year",
+    x = "Percentage (%)",
+    y = "Year",
+    fill = "Response"
+  ) +
+  scale_x_continuous(labels = scales::percent_format())+
+  theme_minimal()+
+  geom_text(
+    aes(label = paste0(round(Percentage, 0), "%")),
+    position = position_fill(vjust = 0.5),
+    size = 3,
+    colour = "white"
+  )
+
+informed_choice_scotland_timeseries_barchart
+save_plot_with_script_name(informed_choice_scotland_timeseries_barchart)
