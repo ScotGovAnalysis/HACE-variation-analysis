@@ -32,17 +32,17 @@ data_list_demographics_clean <- file_path_demographics |>
 
 list2env(data_list_demographics_clean, envir = .GlobalEnv)
 
-data_list_geographies_clean <- file_path_geographies |>
+data_list_geographies_clean_2025 <- file_path_geographies_2025 |>
   # Get the sheet names from the published workbook
   excel_sheets() |>
   #Read all the sheets in except the cover page, in this case its called background
   (\(sheets) sheets[sheets != "Background"])() |>
   # Read all sheets from the published workbook into a named list
   set_names() |>
-  map(\(sheet) read_excel(file_path_geographies, sheet = sheet)) |> 
+  map(\(sheet) read_excel(file_path_geographies_2025, sheet = sheet)) |> 
   map(clean_types)
 
-list2env(data_list_geographies_clean, envir = .GlobalEnv)
+list2env(data_list_geographies_clean_2025, envir = .GlobalEnv)
 
 data_list_geographies_2023_clean <- file_path_geographies_2023 |>
   # Get the sheet names from the published workbook
@@ -55,6 +55,19 @@ data_list_geographies_2023_clean <- file_path_geographies_2023 |>
   map(clean_types)
 
 list2env(data_list_geographies_2023_clean, envir = .GlobalEnv)
+
+data_list_geographies_2021_clean <- file_path_geographies_2021 |>
+  # Get the sheet names from the published workbook
+  excel_sheets() |>
+  #Read all the sheets in except the cover page and notes
+  (\(sheets) sheets[sheets != c("Notes","Question Mapping")])() |>
+  # Read all sheets from the published workbook into a named list
+  set_names() |>
+  map(\(sheet) read_excel(file_path_geographies_2021, sheet = sheet)) |> 
+  map(clean_types)
+
+list2env(data_list_geographies_2021_clean, envir = .GlobalEnv)
+
 
 Scotland_characteristics_joined <- Scotland |> 
   mutate(
