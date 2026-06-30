@@ -68,6 +68,17 @@ data_list_geographies_2021_clean <- file_path_geographies_2021 |>
 
 list2env(data_list_geographies_2021_clean, envir = .GlobalEnv)
 
+variation_data_2025 <- `GP Practice` %>% 
+  left_join(
+    SG_Practice_lookup,
+    by = c("GP Practice Code" = "gp_prac_no")
+  ) %>% 
+  select(
+    "Question Number","Topic","Question Text","Response Option","Area Type",
+    "hscp_name","hscp_gpcl_name","hb_name","GP Practice name",
+    "Number of Responses","Percentage","Lower 95% Confidence Interval",
+    "Upper 95% Confidence Interval"
+  )
 
 Scotland_characteristics_joined <- Scotland |> 
   mutate(
