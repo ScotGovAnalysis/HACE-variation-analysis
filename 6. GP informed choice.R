@@ -722,3 +722,80 @@ informed_choice_scotland_timeseries_barchart <- ggplot(informed_choice_scotland_
 
 informed_choice_scotland_timeseries_barchart
 save_plot_with_script_name(informed_choice_scotland_timeseries_barchart)
+
+################################################################################
+#------------------## informed choice variation analysis ##--------------------#
+informed_choice_variation_by_GP <- variation_data_2025 %>%
+  filter(
+    `Question Number` == "q16m",
+    `Response Option` =="positive"
+  ) %>%
+  group_by(hscp_name, `GP Practice name`) %>%
+  summarise(
+    informed_choice_percentage = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+informed_choice_variation_by_hscp <- informed_choice_variation_by_GP %>%
+  group_by(hscp_name) %>%
+  summarise(
+    num_practices = n(),
+    sd_pct = sd(informed_choice_percentage, na.rm = TRUE),
+    min_pct = min(informed_choice_percentage, na.rm = TRUE),
+    max_pct = max(informed_choice_percentage, na.rm = TRUE),
+    range_pct = max_pct - min_pct,
+    .groups = "drop"
+  ) %>%
+  arrange(desc(sd_pct))
+
+
+informed_choice_variation_tails <- bind_rows(
+  Top5 = informed_choice_variation_by_hscp %>% slice_head(n = 5),
+  Bottom5 = informed_choice_variation_by_hscp %>% slice_tail(n = 5),
+  .id = "Group"
+) %>%
+  pull(hscp_name)
+
+
+ggplot(
+  informed_choice_variation_by_GP %>%
+    filter(hscp_name %in% informed_choice_variation_tails),
+  aes(x = reorder(hscp_name, informed_choice_percentage),
+      y = informed_choice_percentage)
+) +
+  geom_boxplot(outlier.shape = NA, fill = "lightgrey") +
+  coord_flip() +
+  labs(
+    title = "Informed choice: Top 5 and Bottom 5 HSCPs by variation",
+    x = "HSCP",
+    y = "% positive"
+  ) +
+  theme_minimal()
+
+
+chosen_informed_choice_variation_by_hscp <- informed_choice_variation_by_GP %>%
+  filter(
+    hscp_name %in% c("North Lanarkshire","Aberdeenshire","Edinburgh","Orkney Islands")
+  )
+
+
+chosen_informed_choice_variation_by_hscp_plot <- ggplot(
+  chosen_informed_choice_variation_by_hscp, 
+  aes(x = reorder(hscp_name, informed_choice_percentage), y = informed_choice_percentage)) +
+  geom_jitter(
+    aes(colour = hscp_name),
+    width = 0.4, height = 0,
+    size = 3, alpha = 0.75
+  ) +
+  scale_y_continuous(limits = c(0,100))+
+  labs(
+    title = "% positive they could make an informed choice ",
+    x = "HSCP",
+    y = "% positive"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 0)
+  )
+chosen_informed_choice_variation_by_hscp_plot
+save_plot_with_script_name(chosen_informed_choice_variation_by_hscp_plot)

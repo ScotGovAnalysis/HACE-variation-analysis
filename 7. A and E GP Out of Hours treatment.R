@@ -698,6 +698,105 @@ OOH_care_scotland_timeseries_barchart <- ggplot(
 OOH_care_scotland_timeseries_barchart
 save_plot_with_script_name(OOH_care_scotland_timeseries_barchart)
 
+#------------------## Out of hours care variation analysis ##----------------------#
+### COME back to as will need to merge lookup to a new dataset ###
+SG_Practice_lookup_HSCP <- SG_Practice_lookup %>% 
+  select(
+    "hscp_name",
+    "hb_name"
+  ) %>% 
+  distinct(hscp_name, .keep_all = TRUE)
+
+OOH_variation_data_2025 <- `HSCP` %>% 
+  left_join(
+    SG_Practice_lookup_HSCP,
+    by = c("Area" = "hscp_name")
+  ) %>% 
+  select(
+    "Question Number","Topic","Question Text","Response Option","Area Type",
+    "Area","hb_name",
+    "Number of Responses","Percentage","Lower 95% Confidence Interval",
+    "Upper 95% Confidence Interval"
+  ) %>% 
+  rename("hscp_name"="Area")
+
+OOH_care_variation_by_hscp <- OOH_variation_data_2025 %>%
+  filter(
+    `Question Number` == "q24c",
+    `Response Option` =="positive"
+  ) %>%
+  group_by(hb_name, hscp_name) %>%
+  summarise(
+    OOH_care_percentage = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+OOH_care_variation_by_hb <- OOH_care_variation_by_hscp %>%
+  group_by(hb_name) %>%
+  summarise(
+    num_practices = n(),
+    sd_pct = sd(OOH_care_percentage, na.rm = TRUE),
+    min_pct = min(OOH_care_percentage, na.rm = TRUE),
+    max_pct = max(OOH_care_percentage, na.rm = TRUE),
+    range_pct = max_pct - min_pct,
+    .groups = "drop"
+  ) %>%
+  arrange(desc(sd_pct))
+
+
+OOH_care_variation_tails <- bind_rows(
+  Top5 = OOH_care_variation_by_hscp %>% slice_head(n = 5),
+  Bottom5 = OOH_care_variation_by_hscp %>% slice_tail(n = 5),
+  .id = "Group"
+) %>%
+  pull(hb_name)
+
+
+ggplot(
+  OOH_care_variation_by_hscp %>%
+    filter(hb_name %in% OOH_care_variation_tails),
+  aes(x = reorder(hb_name, OOH_care_percentage),
+      y = OOH_care_percentage)
+) +
+  geom_boxplot(outlier.shape = NA, fill = "lightgrey") +
+  coord_flip() +
+  labs(
+    title = "OOH_care: Top 5 and Bottom 5 HSCPs by variation",
+    x = "HB",
+    y = "% positive"
+  ) +
+  theme_minimal()
+
+
+chosen_OOH_care_variation_by_hb <- OOH_care_variation_by_hscp %>%
+  filter(
+    hb_name %in% c("NHS Ayrshire and Arran","NHS Tayside","NHS Greater Glasgow and Clyde", "NHS Lothian")
+  )
+
+
+chosen_OOH_care_variation_by_hb_plot <- ggplot(
+  chosen_OOH_care_variation_by_hb, 
+  aes(x = reorder(hb_name, OOH_care_percentage), y = OOH_care_percentage)) +
+  geom_jitter(
+    aes(colour = hb_name),
+    width = 0.25, height = 0,
+    size = 3, alpha = 0.75
+  ) +
+  scale_y_continuous(limits = c(0,100))+
+  labs(
+    title = "% positive experience OOH care",
+    x = "HB",
+    y = "% positive"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 0)
+  )
+
+chosen_OOH_care_variation_by_hb_plot
+save_plot_with_script_name(chosen_OOH_care_variation_by_hb_plot)
+
+
 ##################################################################################
 # #Calculating the number of redacted responses at each geography level
 # `GP Practice` %>%

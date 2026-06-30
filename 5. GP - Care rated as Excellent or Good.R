@@ -219,11 +219,11 @@ overall_care_HSCP_barchart <- make_barchart_multiple_groups(
   x_var = pct_band,
   y_var = n_practices,
   title = str_wrap(
-    "The percentage of respondents who rated the overall care from their General Practice as positive by GP HSCP",
+    "The percentage of respondents who rated the overall care from their General Practice as positive by HSCP",
     width = 60
   ),
   x_lab = "Percentage (%)",
-  y_lab = "Number of GP HSCPs")+
+  y_lab = "Number of HSCPs")+
   geom_point(
     data = data.frame(
       pct_band = scotland_band,
@@ -739,6 +739,81 @@ overall_care_scotland_timeseries_barchart <- ggplot(overall_care_scotland_timese
 
 overall_care_scotland_timeseries_barchart
 save_plot_with_script_name(overall_care_scotland_timeseries_barchart)
+
+#------------------------## Overall care variation analysis ##--------------------------#
+overall_care_variation_by_GP <- variation_data_2025 %>%
+  filter(
+    `Question Number` == "q13",
+    `Response Option` =="positive"
+  ) %>%
+  group_by(hscp_name, `GP Practice name`) %>%
+  summarise(
+    overall_care_percentage = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+overall_care_variation_by_hscp <- overall_care_variation_by_GP %>%
+  group_by(hscp_name) %>%
+  summarise(
+    num_practices = n(),
+    sd_pct = sd(overall_care_percentage, na.rm = TRUE),
+    min_pct = min(overall_care_percentage, na.rm = TRUE),
+    max_pct = max(overall_care_percentage, na.rm = TRUE),
+    range_pct = max_pct - min_pct,
+    .groups = "drop"
+  ) %>%
+  arrange(desc(sd_pct))
+
+
+overall_care_variation_tails <- bind_rows(
+  Top5 = overall_care_variation_by_hscp %>% slice_head(n = 5),
+  Bottom5 = overall_care_variation_by_hscp %>% slice_tail(n = 5),
+  .id = "Group"
+) %>%
+  pull(hscp_name)
+
+
+ggplot(
+  overall_care_variation_by_GP %>%
+    filter(hscp_name %in% overall_care_variation_tails),
+  aes(x = reorder(hscp_name, overall_care_percentage),
+      y = overall_care_percentage)
+) +
+  geom_boxplot(outlier.shape = NA, fill = "lightgrey") +
+  coord_flip() +
+  labs(
+    title = "overall care: Top 5 and Bottom 5 HSCPs by variation",
+    x = "HSCP",
+    y = "% positive"
+  ) +
+  theme_minimal()
+
+chosen_overall_care_variation_by_hscp <- overall_care_variation_by_GP %>%
+  filter(
+    hscp_name %in% c("North Lanarkshire","Aberdeenshire","East Dunbartonshire","Glasgow City")
+  )
+
+
+chosen_overall_care_variation_by_hscp_plot <- ggplot(
+  chosen_overall_care_variation_by_hscp, 
+  aes(x = reorder(hscp_name, overall_care_percentage), y = overall_care_percentage)) +
+  geom_jitter(
+    aes(colour = hscp_name),
+    width = 0.4, height = 0,
+    size = 3, alpha = 0.75
+  ) +
+  scale_y_continuous(limits = c(0,100))+
+  labs(
+    title = "% rating overall care positive by GP Practice, grouped by HSCP",
+    x = "HSCP",
+    y = "% positive"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 0)
+  )
+chosen_overall_care_variation_by_hscp_plot
+save_plot_with_script_name(chosen_overall_care_variation_by_hscp_plot)
 
 ##----------------------------------------------------------------------------#
 ################################################################################
