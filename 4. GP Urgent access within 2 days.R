@@ -23,10 +23,6 @@ sgplot::use_sgplot()
 
 #Source function to save plots from utility script
 source("1. Utility.R")
-#Load clean data from rds scripts
-data_list_demographics <- readRDS("Clean data/data_list_demographics_clean.rds")
-data_list_geographies <- readRDS("Clean data/data_list_geographies_clean.rds")
-
 
 # Summary table showing the percentage of respondents who saw or spoke to a doctor
 # or nurse within 2 working days
@@ -634,7 +630,8 @@ within_2_days_scotland_by_chronic_pain <- `Chronic Pain` %>%
 
 within_2_days_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
   data = within_2_days_scotland_by_chronic_pain %>% 
-    mutate(`By Question Response Option` = factor(
+    mutate(
+      `By Question Response Option` = factor(
       `By Question Response Option`,
       levels = c("Yes", "No", "Skipped Q42")
     )),
@@ -686,7 +683,8 @@ within_2_days_scotland_by_long_term <- `Long-Term Condition` %>%
 
 within_2_days_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
   data = within_2_days_scotland_by_long_term %>% 
-    mutate(`By Question Response Option` = factor(
+    mutate(
+      `By Question Response Option` = factor(
       `By Question Response Option`,
       levels = c("Yes", "No", "Skipped Question")
     )),
@@ -738,11 +736,15 @@ within_2_days_scotland_by_sexual_orientation <- `Sexual Orientation` %>%
 
 within_2_days_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_groups(
   data = within_2_days_scotland_by_sexual_orientation %>% 
-    mutate(`By Question Response Option` = 
-             forcats::fct_reorder(`By Question Response Option`,
-                                  percentage_within_2_days,
-                                  .desc = TRUE) %>%
-             forcats::fct_relevel("Skipped Q43", after = Inf)
+    mutate(
+      `By Question Response Option` = 
+       forcats::fct_reorder(
+         `By Question Response Option`,
+          percentage_within_2_days,
+          .desc = TRUE) %>%
+       forcats::fct_relevel(
+         "Skipped Q43", 
+         after = Inf)
     ),
   x_var = `By Question Response Option`,
   y_var = percentage_within_2_days,
@@ -922,4 +924,81 @@ within_2_days_scotland_timeseries_barchart
 save_plot_with_script_name(within_2_days_scotland_timeseries_barchart)
 
 ##----------------------------------------------------------------------------#
+#------------------## Within 2 days variation analysis ##---------------------#
+within_2_days_variation_by_GP <- variation_data_2025 %>%
+  filter(
+    `Question Number` == "q10",
+    `Response Option` %in% within_2_days_responses
+  ) %>%
+  group_by(hscp_name, `GP Practice name`) %>%
+  summarise(
+    within_2_days_percentage = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
 
+within_2_days_variation_by_hscp <- within_2_days_variation_by_GP %>%
+  group_by(hscp_name) %>%
+  summarise(
+    num_practices = n(),
+    sd_pct = sd(within_2_days_percentage, na.rm = TRUE),
+    min_pct = min(within_2_days_percentage, na.rm = TRUE),
+    max_pct = max(within_2_days_percentage, na.rm = TRUE),
+    range_pct = max_pct - min_pct,
+    .groups = "drop"
+  ) %>%
+  arrange(desc(sd_pct))
+
+
+within_2_days_variation_tails <- bind_rows(
+  Top5 = within_2_days_variation_by_hscp %>% slice_head(n = 5),
+  Bottom5 = within_2_days_variation_by_hscp %>% slice_tail(n = 5),
+  .id = "Group"
+  ) %>%
+  pull(hscp_name)
+
+
+within_2_days_variation_tails_by_hscp_plot <- ggplot(
+  within_2_days_variation_by_GP %>%
+    filter(hscp_name %in% within_2_days_variation_tails),
+  aes(x = reorder(hscp_name, within_2_days_percentage),
+      y = within_2_days_percentage)
+) +
+  geom_boxplot(outlier.shape = NA, fill = "lightgrey") +
+  coord_flip() +
+  labs(
+    title = "Urgent access: Top 5 and Bottom 5 HSCPs by variation",
+    x = "HSCP",
+    y = "% within 2 days"
+  ) +
+  theme_minimal()
+within_2_days_variation_tails_by_hscp_plot
+save_plot_with_script_name(within_2_days_variation_tails_by_hscp_plot)
+
+chosen_within_2_days_variation_by_hscp <- within_2_days_variation_by_GP %>%
+  filter(
+    hscp_name %in% c(
+      "Glasgow City","North Lanarkshire","West Dunbartonshire","Scottish Borders")
+  )
+
+
+
+chosen_within_2_days_variation_by_hscp_plot <- ggplot(
+  chosen_within_2_days_variation_by_hscp, 
+  aes(x = hscp_name, y = within_2_days_percentage)) +
+  geom_jitter(
+    aes(colour = hscp_name),
+    width = 0.4, height = 0,
+    size = 3, alpha = 0.75
+  ) +
+  scale_y_continuous(limits = c(0,100))+
+  labs(
+    title = "Urgent access by HSCP",
+    x = "HSCP",
+    y = "% seen within 2 days"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 0)
+  )
+chosen_within_2_days_variation_by_hscp_plot
+save_plot_with_script_name(chosen_within_2_days_variation_by_hscp_plot)
