@@ -34,18 +34,20 @@ save_plot_with_script_name <- function(plot) {
   
   plot_title <- plot$labels$title
   
-  geom_classes <- unlist(lapply(plot$layers, function(x) class(x$geom)))
+  geom_classes <- sapply(plot$layers, function(x) class(x$geom)[1])
   
   plot_type <- if (any(grepl("GeomBoxplot", geom_classes))) {
     "Box plot of"
+  } else if ("GeomViolin" %in% geom_classes) {
+    "Violin plot of"
   } else if (any(grepl("GeomCol|GeomBar", geom_classes))) {
     "Bar chart of"
-  } else if (any(grepl("GeomPoint", geom_classes))) {
-    "Scatter plot of"
   } else if (any(grepl("GeomLine", geom_classes))) {
     "Line plot of"
   } else if (any(grepl("GeomDensity", geom_classes))) {
     "Density plot of"
+  } else if (any(grepl("GeomPoint", geom_classes))) {
+    "Scatter plot of"
   } else {
     "Plot of"
   }
@@ -59,7 +61,10 @@ save_plot_with_script_name <- function(plot) {
     width = 10,
     height = 6
   )
+  
+  print(geom_classes)
 }
+
 # Function for creating histograms
 make_histogram <- function(data, 
                            x_var, 
