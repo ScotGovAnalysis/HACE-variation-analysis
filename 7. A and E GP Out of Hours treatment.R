@@ -610,7 +610,7 @@ OOH_care_scotland_2021 <- `Scotland - PNN Questions` %>%
   filter(
     `Question Number` == "26c"
   )%>%
-  select(-c("Questionnaire Section", "Scotland"))%>% 
+  select(-c("Questionnaire Section", "Scotland", "% Neutral", "% Negative"))%>% 
   pivot_longer(
     cols = starts_with("%"),
     names_to = "Response Option",
@@ -630,6 +630,7 @@ OOH_care_scotland_2023 <- `Positive, Neutral or Negative` %>%
     `Question Number` == "q24c"
   )%>%
   select(-c("...11","Geography Type","Area", "Area Name", "Survey Section",
+            "Percentage Neutral", "Percentage Negative",
             "Lower 95% Confidence Interval - Percentage Positive", 
             "Upper 95% Confidence Interval - Percentage Positive")
   ) %>% 
@@ -648,7 +649,8 @@ OOH_care_scotland_2023 <- `Positive, Neutral or Negative` %>%
 
 OOH_care_scotland_2025 <- Scotland %>%
   filter(
-    `Question Number` == "q24c"
+    `Question Number` == "q24c",
+    `Response Option`== "positive"
   ) %>% 
   mutate(
     "Year"="2025"
@@ -661,42 +663,58 @@ OOH_care_scotland_timeseries <- bind_rows(
   OOH_care_scotland_2025,
   # 2019 row
   tibble(
-    `Question Number` = rep("20",6),
-    `Question Text` = rep(" I was treated with compassion and understanding",6),
-    `Number of Responses` = c(rep(22294,3),rep(48975,3)),
-    `Response Option` = rep(c("positive", "neutral", "negative"),2),
-    `Percentage` = c(84,10,6, #2019
-                     86,9,4),#2017
-    `Year` = c(rep("2019",3), rep(2017,3))
+    `Question Number` = rep("20",2),
+    `Question Text` = rep(" I was treated with compassion and understanding",2),
+    `Number of Responses` = c(22294,48975),
+    `Response Option` = rep(c("positive"),2),
+    `Percentage` = c(84, #2019
+                     86),#2017
+    `Year` = c("2019","2017")
   )
 ) %>%
   mutate(`Response Option` = as.factor(`Response Option`))
 
 glimpse(OOH_care_scotland_timeseries)
 
-OOH_care_scotland_timeseries_barchart <- ggplot(
-  OOH_care_scotland_timeseries,
-  aes(x = Percentage,
-      y = Year,
-      fill = `Response Option`)) +
-  geom_col(position = "fill", width = 0.6) +
-  labs(
-    title = "Timeseries of % responding 'I was treated with compassion and understanding' during A and E or GP OOH care",
-    x = "Percentage (%)",
-    y = "Year",
-    fill = "Response"
-  ) +
-  scale_x_continuous(labels = scales::percent_format())+
-  theme_minimal()+
+OOH_care_scotland_timeseries_barchart <- make_barchart_multiple_groups(
+  data = OOH_care_scotland_timeseries,
+  x_var = Year, 
+  y_var = Percentage,
+  title = "Timeseries of out of hours care rated positive",
+  x_lab = "Year",
+  y_lab = "Percentage (%)"
+  )+
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, 10)
+  )+
   geom_text(
     aes(label = paste0(round(Percentage, 0), "%")),
-    position = position_fill(vjust = 0.5),
+    vjust = 2,
     size = 3,
     colour = "white"
   )
-
-OOH_care_scotland_timeseries_barchart
+OOH_care_scotland_timeseries_barchart  
 save_plot_with_script_name(OOH_care_scotland_timeseries_barchart)
+
+OOH_care_scotland_timeseries_scatter <- make_scatter(
+  data = OOH_care_scotland_timeseries,
+  x_var = Year,
+  y_var = Percentage,
+  title = "Timeseries of OOH care rated positive",
+  y_lab = "Percentage (%)",
+  x_lab = "Year"
+)+
+  geom_line(aes(group = 1), linewidth = 1) +
+  geom_text(
+    aes(
+      label = paste0(round(Percentage, 0), "%")),
+    vjust = -0.9,
+    size = 3
+  )
+OOH_care_scotland_timeseries_scatter
+save_plot_with_script_name(OOH_care_scotland_timeseries_scatter)
+
 
 #------------------## Out of hours care variation analysis ##----------------------#
 ### COME back to as will need to merge lookup to a new dataset ###

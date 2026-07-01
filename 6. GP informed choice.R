@@ -646,7 +646,7 @@ informed_choice_scotland_2021 <- `Scotland - PNN Questions` %>%
   filter(
     `Question Number` == "13l"
   )%>%
-  select(-c("Questionnaire Section", "Scotland"))%>% 
+  select(-c("Questionnaire Section", "Scotland", "% Neutral", "% Negative"))%>% 
   pivot_longer(
     cols = starts_with("%"),
     names_to = "Response Option",
@@ -666,6 +666,7 @@ informed_choice_scotland_2023 <- `Positive, Neutral or Negative` %>%
     `Question Number` == "q16m"
   )%>%
   select(-c("...11","Geography Type","Area", "Area Name", "Survey Section",
+            "Percentage Neutral", "Percentage Negative",
             "Lower 95% Confidence Interval - Percentage Positive", 
             "Upper 95% Confidence Interval - Percentage Positive")
   ) %>% 
@@ -684,7 +685,8 @@ informed_choice_scotland_2023 <- `Positive, Neutral or Negative` %>%
 
 informed_choice_scotland_2025 <- Scotland %>%
   filter(
-    `Question Number` == "q16m"
+    `Question Number` == "q16m",
+    `Response Option`=="positive"
   ) %>% 
   mutate(
     "Year"="2025"
@@ -700,28 +702,47 @@ informed_choice_scotland_timeseries <- bind_rows(
 
 glimpse(informed_choice_scotland_timeseries)
 
-informed_choice_scotland_timeseries_barchart <- ggplot(informed_choice_scotland_timeseries,
-                                                    aes(x = Percentage,
-                                                        y = Year,
-                                                        fill = `Response Option`)) +
-  geom_col(position = "fill", width = 0.6) +
-  labs(
-    title = "Informed choice rating by year",
-    x = "Percentage (%)",
-    y = "Year",
-    fill = "Response"
-  ) +
-  scale_x_continuous(labels = scales::percent_format())+
-  theme_minimal()+
+informed_choice_scotland_timeseries_barchart <- make_barchart_multiple_groups(
+  data = informed_choice_scotland_timeseries,
+  x_var = Year, 
+  y_var = Percentage,
+  title = "Timeseries of informed choice rated positive",
+  x_lab = "Year",
+  y_lab = "Percentage (%)"
+)+
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, 10)
+  )+
   geom_text(
     aes(label = paste0(round(Percentage, 0), "%")),
-    position = position_fill(vjust = 0.5),
+    vjust = 2,
     size = 3,
     colour = "white"
   )
-
 informed_choice_scotland_timeseries_barchart
 save_plot_with_script_name(informed_choice_scotland_timeseries_barchart)
+
+informed_choice_scotland_timeseries_scatter <- make_scatter(
+  data = informed_choice_scotland_timeseries,
+  x_var = Year,
+  y_var = Percentage,
+  title = "Timeseries of informed choice rated positive",
+  y_lab = "Percentage (%)",
+  x_lab = "Year"
+)+
+  geom_line(aes(group = 1), linewidth = 1) +
+  geom_text(
+    aes(
+      label = paste0(round(Percentage, 0), "%")),
+    vjust = -0.9,
+    size = 3
+  )
+informed_choice_scotland_timeseries_scatter
+save_plot_with_script_name(informed_choice_scotland_timeseries_scatter)
+
+
+
 
 ################################################################################
 #------------------## informed choice variation analysis ##--------------------#

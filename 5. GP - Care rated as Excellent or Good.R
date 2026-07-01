@@ -652,7 +652,7 @@ overall_care_scotland_2021 <- `Scotland - PNN Questions` %>%
   filter(
     `Question Number` == "10"
   )%>%
-  select(-c("Questionnaire Section", "Scotland"))%>% 
+  select(-c("Questionnaire Section", "Scotland", "% Neutral", "% Negative"))%>% 
   pivot_longer(
     cols = starts_with("%"),
     names_to = "Response Option",
@@ -672,6 +672,7 @@ overall_care_scotland_2023 <- `Positive, Neutral or Negative` %>%
     `Question Number` == "q13"
     )%>%
   select(-c("...11","Geography Type","Area", "Area Name", "Survey Section",
+            "Percentage Neutral", "Percentage Negative",
             "Lower 95% Confidence Interval - Percentage Positive", 
             "Upper 95% Confidence Interval - Percentage Positive")
          ) %>% 
@@ -690,7 +691,8 @@ overall_care_scotland_2023 <- `Positive, Neutral or Negative` %>%
 
 overall_care_scotland_2025 <- Scotland %>%
   filter(
-    `Question Number` == "q13"
+    `Question Number` == "q13",
+    `Response Option`=="positive"
     ) %>% 
   mutate(
     "Year"="2025"
@@ -703,13 +705,13 @@ overall_care_scotland_timeseries <- bind_rows(
   overall_care_scotland_2025,
     # 2019 & 2017 row
     tibble(
-      `Question Number` = rep("10",6),
-      `Question Text` = rep("Overall, how would you rate the care provided by your GP Practice?",6),
-      `Number of Responses` = c(rep(137249,3),rep(115006,3)),
-      `Response Option` = rep(c("positive", "neutral", "negative"),2),
-      `Percentage` = c(79,15,6, #2019
-                       83,13,5), #2017
-      `Year` = c(rep("2019",3), rep("2017",3))
+      `Question Number` = rep("10",2),
+      `Question Text` = rep("Overall, how would you rate the care provided by your GP Practice?",2),
+      `Number of Responses` = c(137249,115006),
+      `Response Option` = rep(c("positive"),2),
+      `Percentage` = c(79, #2019
+                       83), #2017
+      `Year` = c("2019","2017")
     )) %>%
     mutate(`Response Option` = as.factor(`Response Option`))
 
@@ -717,28 +719,44 @@ overall_care_scotland_timeseries <- bind_rows(
 
 glimpse(overall_care_scotland_timeseries)
 
-overall_care_scotland_timeseries_barchart <- ggplot(overall_care_scotland_timeseries,
-       aes(x = Percentage,
-           y = Year,
-           fill = `Response Option`)) +
-  geom_col(position = "fill", width = 0.6) +
-  labs(
-    title = "Overall care rating by year",
-    x = "Percentage (%)",
-    y = "Year",
-    fill = "Response"
-  ) +
-  scale_x_continuous(labels = scales::percent_format())+
-  theme_minimal()+
+overall_care_scotland_timeseries_barchart <- make_barchart_multiple_groups(
+  data = overall_care_scotland_timeseries, 
+  x_var = Year, 
+  y_var = Percentage,
+  title = "Timeseries of overall care rated positive",
+  x_lab = "Year",
+  y_lab = "Percentage (%)"
+)+
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, 10)
+  )+
   geom_text(
     aes(label = paste0(round(Percentage, 0), "%")),
-    position = position_fill(vjust = 0.5),
+    vjust = 2,
     size = 3,
     colour = "white"
   )
-
-overall_care_scotland_timeseries_barchart
+overall_care_scotland_timeseries_barchart  
 save_plot_with_script_name(overall_care_scotland_timeseries_barchart)
+
+overall_care_scotland_timeseries_scatter <- make_scatter(
+  data = overall_care_scotland_timeseries,
+  x_var = Year,
+  y_var = Percentage,
+  title = "Timeseries of overall care rated positive",
+  y_lab = "Percentage (%)",
+  x_lab = "Year"
+)+
+  geom_line(aes(group = 1), linewidth = 1) +
+  geom_text(
+    aes(
+      label = paste0(round(Percentage, 0), "%")),
+    vjust = -0.9,
+    size = 3
+  )
+overall_care_scotland_timeseries_scatter
+save_plot_with_script_name(overall_care_scotland_timeseries_scatter)
 
 #------------------------## Overall care variation analysis ##--------------------------#
 overall_care_variation_by_GP <- variation_data_2025 %>%
