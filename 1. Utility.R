@@ -58,8 +58,9 @@ save_plot_with_script_name <- function(plot) {
   ggsave(
     filename = file.path(folder_name, paste0(safe_title, ".svg")),
     plot = plot,
-    width = 10,
-    height = 6
+    width = 15,
+    height = 8,
+    units = "cm"
   )
   
   print(geom_classes)
@@ -89,7 +90,8 @@ make_histogram <- function(data,
     theme(
       axis.title.y = element_text(angle = 90),
       plot.title = element_text(hjust = 0.5)
-    )
+    )+
+    theme_minimal(base_size = 12)
 }
 
 make_boxplot_multiple_groups <- function(data,
@@ -108,7 +110,8 @@ make_boxplot_multiple_groups <- function(data,
     ) +
     theme(
       plot.title = element_text(hjust = 0.5)
-    )
+    )+
+    theme_minimal(base_size = 12)
 }
 
 make_boxplot_single_group <- function(data, 
@@ -129,7 +132,8 @@ make_boxplot_single_group <- function(data,
       plot.title = element_text(hjust = 0.5), # centering the main title
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank()
-      )
+      )+
+    theme_minimal(base_size = 12)
 }
 
 make_scatter <- function(data, x_var, y_var, title,
@@ -147,7 +151,8 @@ make_scatter <- function(data, x_var, y_var, title,
     theme(
       axis.title.y = element_text(angle = 90),
       plot.title = element_text(hjust = 0.5)
-    )
+    )+
+    theme_minimal(base_size = 12)
 }
 
 make_barchart_multiple_groups <- function(data,
@@ -169,6 +174,7 @@ make_barchart_multiple_groups <- function(data,
       plot.title = element_text(hjust = 0.5),
       axis.title.y = element_text(angle = 90),
       legend.position = "none"
-    )
+    )+
+    theme_minimal(base_size = 12)
 }
 
