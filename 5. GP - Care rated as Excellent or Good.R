@@ -19,6 +19,7 @@
 
 # Set SGplot for default chart colours
 sgplot::use_sgplot()
+scale_colour_sg(palette = "main-extended")
 
 #Source function to save plots from utility script
 source("1. Utility.R")
@@ -122,24 +123,21 @@ overall_care_GP_barchart <- make_barchart_multiple_groups(
       ),
   x_lab = "Percentage (%)",
   y_lab = "Number of GP practices")+
-  geom_point(
-    data = data.frame(
-      pct_band = scotland_band,
-      n_practices = 1
+  geom_col(fill = "#0b4c0b")+
+  geom_text(
+    aes(
+      label = round(n_practices, 0),
+      colour = n_practices < 25,
+      vjust = ifelse(n_practices < 25, -0.5, 2)
     ),
-    aes(x = pct_band, y = scotland_y),
-    colour = "red",
-    size = 4
-  )+
-  annotate(
-    "text",
-    x = scotland_band,
-    y = scotland_y,
-    label = paste0("Scottish average ", round(overall_care_scotland, 0), "%"),
-    vjust = -0.8,
-    colour = "red",
-    fontface = "bold"
+    size = 4,
+    show.legend = FALSE
+  ) +
+  scale_colour_manual(
+    values = c("FALSE" = "white",
+               "TRUE" = "black")
   )
+
 overall_care_GP_barchart
 save_plot_with_script_name(overall_care_GP_barchart)
 
@@ -265,7 +263,7 @@ overall_care_scotland_by_sex <- Sex_joined %>%
 overall_care_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   data = overall_care_scotland_by_sex %>% 
     filter(Sex != "Scotland Total"),
-  x_var = Sex,
+  x_var = reorder(Sex, -percentage_overall_care),
   y_var = percentage_overall_care,
   title = str_wrap(
     "The percentage of respondents who rated the overall care from their General Practice as positive by sex",
@@ -273,11 +271,13 @@ overall_care_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Sex", 
   y_lab = "Percentage (%)"
-)+
+  )+
+  geom_col(fill = "#0b4c0b")+
   geom_hline(
     yintercept = overall_care_scotland,
     linetype = "dashed",
-    colour = "red"
+    colour = "black",
+    linewidth = 0.75
   )+
   annotate(
     "text",
@@ -286,54 +286,55 @@ overall_care_scotland_by_sex_barchart <- make_barchart_multiple_groups(
     label = paste0("Scottish average: ", round(overall_care_scotland, 0), "%"),
     hjust = 1,
     vjust = -1, 
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+    colour = "black"
+  )+
+  scale_y_continuous(limits = c(0,100))+
+  scale_x_discrete(
+    labels = stringr::str_to_title
+  )
 overall_care_scotland_by_sex_barchart
 save_plot_with_script_name(overall_care_scotland_by_sex_barchart)
 
 ## Barchart of Scotland average answer by Age band #
-overall_care_scotland_by_age <- Age_band_joined %>%
+overall_care_scotland_by_age <- `Age Band` %>%
   filter(
     `Question Number` == "q13",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Age Band`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_overall_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Age Band`) 
+
+# %>%
+#   summarise(
+#     `Question Number` = first(`Question Number`),
+#     `Question Text` = first(`Question Text`),
+#     `Response Option` = "positive",
+#     percentage_overall_care = sum(Percentage, na.rm = TRUE),
+#     .groups = "drop"
+#   )
 
 overall_care_scotland_by_age_barchart <- make_barchart_multiple_groups(
-  data = overall_care_scotland_by_age %>% 
-    filter(`Age Band` != "Scotland Total"),
-  x_var = `Age Band`,
-  y_var = percentage_overall_care,
+  data = overall_care_scotland_by_age, 
+  y_var = `Age Band`,
+  x_var = Percentage,
   title = str_wrap(
     "The percentage of respondents who rated the overall care from their General Practice as positive by age",
     width = 60
   ), 
-  x_lab = "Age", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = overall_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  y_lab = "Age band", 
+  x_lab = "Percentage (%)"
   )+
-  annotate(
-    "text",
-    x = 2,
-    y = overall_care_scotland,
-    label = paste0("Scottish average: ", round(overall_care_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1, 
-    colour = "red"
+  geom_col(fill = "#0b4c0b")+
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
   ) +
-  coord_cartesian(clip = "off")
+  scale_x_continuous(limits = c(0,100))
+
 overall_care_scotland_by_age_barchart
 save_plot_with_script_name(overall_care_scotland_by_age_barchart)
 
@@ -387,7 +388,7 @@ overall_care_scotland_by_SIMD_barchart
 save_plot_with_script_name(overall_care_scotland_by_SIMD_barchart)
 
 # Barchart of Scotland average answer by Urban 8 #
-overall_care_scotland_by_urban <- Urban_Rural_8_joined %>%
+overall_care_scotland_by_urban <- `Urban-Rural 8` %>%
   filter(
     `Question Number` == "q13",
     `Response Option` =="positive"
@@ -399,7 +400,8 @@ overall_care_scotland_by_urban <- Urban_Rural_8_joined %>%
         grepl("^[2-7] ", `Urban-Rural 8-fold classification`),
         sub("^([2-7]).*", "\\1", `Urban-Rural 8-fold classification`),
         `Urban-Rural 8-fold classification`
-      )) %>% 
+      )) 
+%>% 
   summarise(
     `Question Number` = first(`Question Number`),
     `Question Text` = first(`Question Text`),
@@ -409,32 +411,36 @@ overall_care_scotland_by_urban <- Urban_Rural_8_joined %>%
   )
 
 overall_care_scotland_by_urban_barchart <- make_barchart_multiple_groups(
-  data = overall_care_scotland_by_urban %>% 
-    filter(`Urban-Rural 8-fold classification` != "Scotland Total"),
-  x_var = `Urban-Rural 8-fold classification`,
-  y_var = percentage_overall_care,
+  data = overall_care_scotland_by_urban,
+  y_var = `Urban-Rural 8-fold classification`,
+  x_var = Percentage,
   title = str_wrap(
     "The percentage of respondents who rated the overall care from their General Practice as positive by Urban-Rural 8",
     width = 60
   ), 
-  x_lab = "Urban-Rural 8-fold classification", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = overall_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  y_lab = "Urban-Rural 8-fold classification", 
+  x_lab = "Percentage (%)"
   )+
-  annotate(
-    "text",
-    x = 3,
-    y = overall_care_scotland,
-    label = paste0("Scottish average: ", round(overall_care_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1.5, 
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+  geom_col(fill = "#0b4c0b")+
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100),
+    expand = expansion(mult = c(0, 0.05))
+    )+
+  theme(
+    axis.title.x = element_text(
+      margin = margin(t = 30)
+    )
+  )
 overall_care_scotland_by_urban_barchart
 save_plot_with_script_name(overall_care_scotland_by_urban_barchart)
 
@@ -637,7 +643,7 @@ overall_care_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
     y = overall_care_scotland,
     label = paste0("Scottish average: ", round(overall_care_scotland, 1), "%"),
     hjust = 1,
-    vjust = -2,
+    vjust = -1.5,
     colour = "red"
   ) +
   coord_cartesian(clip = "off")
@@ -648,7 +654,7 @@ save_plot_with_script_name(overall_care_scotland_by_ethnicity_barchart)
 ###############################################################################
 ## Comparing to the last surveys results at Scotland level ##
 ## Cleaning 2021 results
-overall_care_scotland_2021 <- `Scotland - PNN Questions` %>% 
+overall_care_scotland_2022 <- `Scotland - PNN Questions` %>% 
   filter(
     `Question Number` == "10"
   )%>%
@@ -661,12 +667,12 @@ overall_care_scotland_2021 <- `Scotland - PNN Questions` %>%
   mutate(
     `Response Option` = gsub("% ", "", `Response Option`),
     `Response Option` = tolower(`Response Option`),
-    "Year"= "2021",
+    "Year"= "2021-22",
     Percentage = as.numeric(as.character(Percentage))
   )
 
 ## Cleaning 2023 results
-overall_care_scotland_2023 <- `Positive, Neutral or Negative` %>% 
+overall_care_scotland_2024 <- `Positive, Neutral or Negative` %>% 
   filter(
     `Geography Type` == "Scotland",
     `Question Number` == "q13"
@@ -684,25 +690,25 @@ overall_care_scotland_2023 <- `Positive, Neutral or Negative` %>%
   mutate(
     `Response Option` = gsub("Percentage ", "", `Response Option`),
     `Response Option` = tolower(`Response Option`),
-    "Year"= "2023",
+    "Year"= "2023-24",
     Percentage = as.numeric(as.character(Percentage))
   ) %>% 
   mutate(Percentage = Percentage*100)
 
-overall_care_scotland_2025 <- Scotland %>%
+overall_care_scotland_2026 <- Scotland %>%
   filter(
     `Question Number` == "q13",
     `Response Option`=="positive"
     ) %>% 
   mutate(
-    "Year"="2025"
+    "Year"="2025-26"
   )%>% 
   select(-c("Topic", "Lower 95% Confidence Interval", "Upper 95% Confidence Interval"))
 
 overall_care_scotland_timeseries <- bind_rows(
-  overall_care_scotland_2021,
-  overall_care_scotland_2023,
-  overall_care_scotland_2025,
+  overall_care_scotland_2022,
+  overall_care_scotland_2024,
+  overall_care_scotland_2026,
     # 2019 & 2017 row
     tibble(
       `Question Number` = rep("10",2),
@@ -711,7 +717,7 @@ overall_care_scotland_timeseries <- bind_rows(
       `Response Option` = rep(c("positive"),2),
       `Percentage` = c(79, #2019
                        83), #2017
-      `Year` = c("2019","2017")
+      `Year` = c("2019-20","2017-18")
     )) %>%
     mutate(`Response Option` = as.factor(`Response Option`))
 
@@ -731,34 +737,39 @@ overall_care_scotland_timeseries_barchart <- make_barchart_multiple_groups(
     limits = c(0, 100),
     breaks = seq(0, 100, 10)
   )+
+  geom_col(fill = "#0b4c0b")+
   geom_text(
     aes(label = paste0(round(Percentage, 0), "%")),
     vjust = 2,
-    size = 3,
+    size = 4,
     colour = "white"
   )
+
 overall_care_scotland_timeseries_barchart  
 save_plot_with_script_name(overall_care_scotland_timeseries_barchart)
 
-overall_care_scotland_timeseries_scatter <- make_scatter(
+overall_care_scotland_timeseries_line <- make_scatter(
   data = overall_care_scotland_timeseries,
   x_var = Year,
   y_var = Percentage,
   title = "Timeseries of overall care rated positive",
   y_lab = "Percentage (%)",
   x_lab = "Year"
-)+
-  geom_line(aes(group = 1), linewidth = 1) +
+  )+
+  geom_line(colour = "#0b4c0b",
+            aes(group = 2), 
+            linewidth = 2, ) +
+  geom_point(size = 4, colour = "#0b4c0b")+
   geom_text(
     aes(
       label = paste0(round(Percentage, 0), "%")),
     vjust = -0.9,
-    size = 3
+    size = 4
   )
-overall_care_scotland_timeseries_scatter
-save_plot_with_script_name(overall_care_scotland_timeseries_scatter)
+overall_care_scotland_timeseries_line
+save_plot_with_script_name(overall_care_scotland_timeseries_line)
 
-#------------------------## Overall care variation analysis ##--------------------------#
+#------------## Overall care variation by HSCP  analysis ##--------------------#
 overall_care_variation_by_GP <- variation_data_2025 %>%
   filter(
     `Question Number` == "q13",
@@ -784,10 +795,14 @@ overall_care_variation_by_hscp <- overall_care_variation_by_GP %>%
 
 
 overall_care_variation_tails <- bind_rows(
-  Top5 = overall_care_variation_by_hscp %>% slice_head(n = 5),
-  Bottom5 = overall_care_variation_by_hscp %>% slice_tail(n = 5),
+  Top5 = overall_care_variation_by_hscp %>%
+    filter(num_practices > 15) %>%
+    slice_head(n = 2),
+  Bottom5 = overall_care_variation_by_hscp %>% 
+    filter(num_practices > 15) %>%
+    slice_tail(n = 2),
   .id = "Group"
-) %>%
+  ) %>%
   pull(hscp_name)
 
 
@@ -808,7 +823,7 @@ ggplot(
 
 chosen_overall_care_variation_by_hscp <- overall_care_variation_by_GP %>%
   filter(
-    hscp_name %in% c("North Lanarkshire","Aberdeenshire","East Dunbartonshire","Glasgow City")
+    hscp_name %in% overall_care_variation_tails
   )
 
 
@@ -830,8 +845,116 @@ chosen_overall_care_variation_by_hscp_plot <- ggplot(
   theme(
     axis.text.x = element_text(angle = 0)
   )
+chosen_overall_care_variation_by_hscp_plot <- ggplot(
+  data = chosen_overall_care_variation_by_hscp, 
+  aes(x = reorder(hscp_name, overall_care_percentage), 
+      y = overall_care_percentage)
+) +
+  geom_jitter(
+    aes(colour = hscp_name),
+    width = 0.4, height = 0,
+    size = 3, alpha = 0.75
+  ) +
+scale_y_continuous(limits = c(0,100))+
+  labs(
+    title = "% positive about the overall care provided by their GP by GP Practice, grouped by HSCP",
+    x = "HSCP",
+    y = "Percentage (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.position = "none"
+  )
+
 chosen_overall_care_variation_by_hscp_plot
 save_plot_with_script_name(chosen_overall_care_variation_by_hscp_plot)
+
+#------------## Overall care variation by GP Cluster  analysis ##--------------------#
+overall_care_variation_by_GP <- variation_data_2025 %>%
+  filter(
+    `Question Number` == "q13",
+    `Response Option` =="positive"
+  ) %>%
+  group_by(hscp_gpcl_name, `GP Practice name`) %>%
+  summarise(
+    overall_care_percentage = sum(Percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+overall_care_variation_by_cluster <- overall_care_variation_by_GP %>%
+  group_by(hscp_gpcl_name) %>%
+  summarise(
+    num_practices = n(),
+    sd_pct = sd(overall_care_percentage, na.rm = TRUE),
+    min_pct = min(overall_care_percentage, na.rm = TRUE),
+    max_pct = max(overall_care_percentage, na.rm = TRUE),
+    range_pct = max_pct - min_pct,
+    .groups = "drop"
+  ) %>%
+  arrange(desc(sd_pct))
+
+
+overall_care_cluster_variation_tails <- bind_rows(
+  Top2 = overall_care_variation_by_cluster %>% 
+    filter(num_practices > 5) %>% 
+    slice_head(n = 2),
+  Bottom2 = overall_care_variation_by_cluster %>% 
+    filter(num_practices > 5) %>% 
+    slice_tail(n = 2),
+  .id = "Group"
+) %>%
+  pull(hscp_gpcl_name)
+
+
+ggplot(
+  overall_care_variation_by_GP %>%
+    filter(hscp_gpcl_name %in% overall_care_cluster_variation_tails),
+  aes(x = reorder(hscp_gpcl_name, overall_care_percentage),
+      y = overall_care_percentage)
+) +
+  geom_boxplot(outlier.shape = NA, fill = "lightgrey") +
+  coord_flip() +
+  labs(
+    title = "overall care: Top 2 and Bottom 2 GP Clusters by variation",
+    x = "GP Cluster",
+    y = "% positive"
+  ) +
+  theme_minimal()
+
+chosen_overall_care_variation_by_cluster <- overall_care_variation_by_GP %>%
+  filter(
+    hscp_gpcl_name %in% overall_care_cluster_variation_tails
+  )
+
+
+chosen_overall_care_variation_by_cluster_plot <- ggplot(
+  data = chosen_overall_care_variation_by_cluster, 
+  aes(x = reorder(hscp_gpcl_name, overall_care_percentage), 
+      y = overall_care_percentage)
+  )+
+  geom_jitter(
+    aes(colour = hscp_gpcl_name, shape = hscp_gpcl_name),
+    width = 0.4, height = 0,
+    size = 3, alpha = 0.75
+  )+
+  scale_colour_discrete_sg(palette = "main-extended")+
+  scale_y_continuous(limits = c(0,100))+
+  labs(
+    title = "% positive about the ease of contacting their GP by GP Practice, grouped by GP Cluser",
+    x = "HSCP",
+    y = "% positive"
+  )+
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.position = "none"
+  )
+
+chosen_overall_care_variation_by_cluster_plot
+save_plot_with_script_name(chosen_overall_care_variation_by_cluster_plot)
 
 ##----------------------------------------------------------------------------#
 ################################################################################
