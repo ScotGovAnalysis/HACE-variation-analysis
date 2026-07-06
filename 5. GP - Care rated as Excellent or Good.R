@@ -66,11 +66,17 @@ overall_care_HSCP <- HSCP %>%
   filter(
     `Question Number` == "q13",
     `Response Option` =="positive") %>%
-  group_by(`Area`) %>%
-  summarise(percentage_overall_care_HSCP = sum(Percentage, na.rm = TRUE), 
-            .groups = "drop") %>%
-  arrange(percentage_overall_care_HSCP) %>%
-  mutate(order = row_number())
+  group_by(`Area`) 
+# %>%
+  # summarise(
+  #   `Question Number` = first(`Question Number`),
+  #   `Question Text` = first(`Question Text`),
+  #   `Response Option` = "positive",
+  #   percentage_overall_care_HSCP = sum(Percentage, na.rm = TRUE),
+  #   .groups = "drop"
+  # ) %>% 
+  # arrange(percentage_overall_care_HSCP) %>%
+  # mutate(order = row_number())
 
 # For Health Board
 overall_care_HB <- `Health Board` %>%
@@ -123,7 +129,7 @@ overall_care_GP_barchart <- make_barchart_multiple_groups(
       ),
   x_lab = "Percentage (%)",
   y_lab = "Number of GP practices")+
-  geom_col(fill = "#0b4c0b")+
+  geom_col(fill = "#19AB19")+
   geom_text(
     aes(
       label = round(n_practices, 0),
@@ -242,54 +248,78 @@ overall_care_HSCP_barchart <- make_barchart_multiple_groups(
   )
 overall_care_HSCP_barchart
 save_plot_with_script_name(overall_care_HSCP_barchart)
+################################################################################
+#Geographical variation 
+
+HSCP_barchart <- make_barchart_multiple_groups(
+  data = overall_care_HSCP ,
+  x_var = Percentage,
+  y_var = reorder(Area, Percentage),
+  title = "Percentage by HSCP",
+  x_lab = "Percentage (%)",
+  y_lab = ""
+  )+
+  geom_col(fill = "#19AB19")+
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100),
+    expand = expansion(mult = c(0, 0.05))
+  )
+HSCP_barchart
+save_plot_with_script_name(HSCP_barchart,
+                           width = 15.68,
+                           height = 11.85)
+
 
 ################################################################################
 ##-----------------------------------------------------------------------------#
 # Barchart of Scotland average answer by sex #
-overall_care_scotland_by_sex <- Sex_joined %>%
+overall_care_scotland_by_sex <- Sex %>%
   filter(
     `Question Number` == "q13",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Sex`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_overall_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Sex`)
+
 
 overall_care_scotland_by_sex_barchart <- make_barchart_multiple_groups(
-  data = overall_care_scotland_by_sex %>% 
-    filter(Sex != "Scotland Total"),
-  x_var = reorder(Sex, -percentage_overall_care),
-  y_var = percentage_overall_care,
+  data = overall_care_scotland_by_sex,
+  x_var = Percentage,
+  y_var = reorder(Sex, Percentage),
   title = str_wrap(
     "The percentage of respondents who rated the overall care from their General Practice as positive by sex",
     width = 60
-  ), 
-  x_lab = "Sex", 
-  y_lab = "Percentage (%)"
+  ),   
+  x_lab = "Percentage (%)",
+  y_lab = "Sex", 
+  bar_colour = c("#0b4c0b","#19AB19")
   )+
-  geom_col(fill = "#0b4c0b")+
-  geom_hline(
-    yintercept = overall_care_scotland,
-    linetype = "dashed",
-    colour = "black",
-    linewidth = 0.75
-  )+
-  annotate(
-    "text",
-    x = Inf,
-    y = overall_care_scotland,
-    label = paste0("Scottish average: ", round(overall_care_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1, 
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
     colour = "black"
+  ) +
+  geom_text(
+    aes(label = paste0(round(Percentage, 0), "%")),
+    hjust = 1.5,
+    size = 4,
+    colour = "white"
   )+
-  scale_y_continuous(limits = c(0,100))+
-  scale_x_discrete(
+  scale_x_continuous(limits = c(0,100))+
+  scale_y_discrete(
     labels = stringr::str_to_title
   )
 overall_care_scotland_by_sex_barchart
@@ -314,16 +344,57 @@ overall_care_scotland_by_age <- `Age Band` %>%
 
 overall_care_scotland_by_age_barchart <- make_barchart_multiple_groups(
   data = overall_care_scotland_by_age, 
-  y_var = `Age Band`,
   x_var = Percentage,
+  y_var = `Age Band`,
   title = str_wrap(
     "The percentage of respondents who rated the overall care from their General Practice as positive by age",
     width = 60
   ), 
+  x_lab = "Percentage (%)",
   y_lab = "Age band", 
-  x_lab = "Percentage (%)"
+  bar_width = 0.75,
+  bar_colour = "19AB19"
   )+
-  geom_col(fill = "#0b4c0b")+
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  ) +
+  scale_x_continuous(limits = c(0,100))+
+  scale_y_discrete(limits = rev)
+
+overall_care_scotland_by_age_barchart
+save_plot_with_script_name(overall_care_scotland_by_age_barchart)
+
+# Barchart of Scotland average answer by SIMD #
+overall_care_scotland_by_SIMD <- SIMD %>%
+  filter(
+    `Question Number` == "q13",
+    `Response Option` =="positive"
+  ) %>%
+  group_by(`Scottish Index of Multiple Deprivation Decile`)
+
+overall_care_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
+  data = overall_care_scotland_by_SIMD %>% 
+    filter(`Scottish Index of Multiple Deprivation Decile` != "Scotland Total"),
+  x_var = Percentage,
+  y_var = reorder(
+    `Scottish Index of Multiple Deprivation Decile`,
+    11-as.numeric(sub("^([0-9]+).*", "\\1",
+                   `Scottish Index of Multiple Deprivation Decile`))
+  ),
+  title = str_wrap(
+    "The percentage of respondents who rated the overall care from their General Practice as positive by SIMD",
+    width = 60
+  ), 
+  x_lab = "Percentage (%)",
+  y_lab = "SIMD decile",
+  bar_colour = "#19AB19"
+  )+
   geom_errorbar(
     aes(
       xmin = `Lower 95% Confidence Interval`,
@@ -334,56 +405,6 @@ overall_care_scotland_by_age_barchart <- make_barchart_multiple_groups(
     colour = "black"
   ) +
   scale_x_continuous(limits = c(0,100))
-
-overall_care_scotland_by_age_barchart
-save_plot_with_script_name(overall_care_scotland_by_age_barchart)
-
-# Barchart of Scotland average answer by SIMD #
-overall_care_scotland_by_SIMD <- SIMD_joined %>%
-  filter(
-    `Question Number` == "q13",
-    `Response Option` =="positive"
-  ) %>%
-  group_by(`Scottish Index of Multiple Deprivation Decile`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_overall_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-overall_care_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
-  data = overall_care_scotland_by_SIMD %>% 
-    filter(`Scottish Index of Multiple Deprivation Decile` != "Scotland Total"),
-  x_var = reorder(
-    `Scottish Index of Multiple Deprivation Decile`,
-    as.numeric(sub("^([0-9]+).*", "\\1",
-                   `Scottish Index of Multiple Deprivation Decile`))
-  ),
-  y_var = percentage_overall_care,
-  title = str_wrap(
-    "The percentage of respondents who rated the overall care from their General Practice as positive by SIMD",
-    width = 60
-  ), 
-  x_lab = "SIMD", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = overall_care_scotland,
-    linetype = "dashed",
-    colour = "red"
-  )+
-  annotate(
-    "text",
-    x = 3,
-    y = overall_care_scotland,
-    label = paste0("Scottish average: ", round(overall_care_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1, 
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
 overall_care_scotland_by_SIMD_barchart
 save_plot_with_script_name(overall_care_scotland_by_SIMD_barchart)
 
@@ -393,35 +414,23 @@ overall_care_scotland_by_urban <- `Urban-Rural 8` %>%
     `Question Number` == "q13",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Urban-Rural 8-fold classification`) %>%
-  mutate(
-    `Urban-Rural 8-fold classification` =
-      ifelse(
-        grepl("^[2-7] ", `Urban-Rural 8-fold classification`),
-        sub("^([2-7]).*", "\\1", `Urban-Rural 8-fold classification`),
-        `Urban-Rural 8-fold classification`
-      )) 
-%>% 
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_overall_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Urban-Rural 8-fold classification`)
 
 overall_care_scotland_by_urban_barchart <- make_barchart_multiple_groups(
   data = overall_care_scotland_by_urban,
-  y_var = `Urban-Rural 8-fold classification`,
+  y_var = factor(
+    `Urban-Rural 8-fold classification`,
+    levels = rev(sort(unique(`Urban-Rural 8-fold classification`)))
+  ),
   x_var = Percentage,
   title = str_wrap(
     "The percentage of respondents who rated the overall care from their General Practice as positive by Urban-Rural 8",
     width = 60
   ), 
-  y_lab = "Urban-Rural 8-fold classification", 
-  x_lab = "Percentage (%)"
+  y_lab = "", 
+  x_lab = "Percentage (%)",
+  bar_colour = "#19AB19"
   )+
-  geom_col(fill = "#0b4c0b")+
   geom_errorbar(
     aes(
       xmin = `Lower 95% Confidence Interval`,
@@ -435,12 +444,8 @@ overall_care_scotland_by_urban_barchart <- make_barchart_multiple_groups(
   scale_x_continuous(
     limits = c(0,100),
     expand = expansion(mult = c(0, 0.05))
-    )+
-  theme(
-    axis.title.x = element_text(
-      margin = margin(t = 30)
     )
-  )
+
 overall_care_scotland_by_urban_barchart
 save_plot_with_script_name(overall_care_scotland_by_urban_barchart)
 
@@ -548,54 +553,47 @@ overall_care_scotland_by_long_term_barchart
 save_plot_with_script_name(overall_care_scotland_by_long_term_barchart)
 
 ## Barchart  by Sexual Orientation ##
-overall_care_scotland_by_sexual_orientation <- `Sexual Orientation` %>% 
+overall_care_scotland_by_sexual_orientation <- `Sexual Orientation` %>%
   filter(
     `Question Number` == "q13",
-    `Response Option` =="positive"
+    `Response Option` == "positive",
+    `By Question Response Option` != "Skipped Q43"
   ) %>%
-  group_by(`By Question Response Option`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_overall_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
+  mutate(
+    `By Question Response Option` =
+      forcats::fct_reorder(
+        `By Question Response Option`,
+        Percentage,
+        .desc = TRUE
+      )
   )
 
-
 overall_care_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_groups(
-  data = overall_care_scotland_by_sexual_orientation %>% 
-    mutate(`By Question Response Option` = 
-             forcats::fct_reorder(`By Question Response Option`,
-                                  percentage_overall_care,
-                                  .desc = TRUE) %>%
-             forcats::fct_relevel("Skipped Q43", after = Inf)
-    ),
-  x_var = `By Question Response Option`,
-  y_var = percentage_overall_care,
+  data = overall_care_scotland_by_sexual_orientation ,
+  x_var = Percentage,
+  y_var = reorder(`By Question Response Option`,Percentage),
   title = str_wrap(
     "The percentage of respondents who rated the overall care from their General Practice as positive by sexual orientation",
     width = 60
   ), 
-  x_lab = "Which of the following best describes your sexual orientation?", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = overall_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)",
+  y_lab = "Sexual orientation", 
+  bar_colour = "#19AB19"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = overall_care_scotland,
-    label = paste0("Scottish average: ", round(overall_care_scotland, 1), "%"),
-    hjust = 1,
-    vjust = -2,
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
-
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100),
+    expand = expansion(mult = c(0, 0.05))
+  )
 overall_care_scotland_by_sexual_orientation_barchart
 save_plot_with_script_name(overall_care_scotland_by_sexual_orientation_barchart)
 
@@ -731,13 +729,13 @@ overall_care_scotland_timeseries_barchart <- make_barchart_multiple_groups(
   y_var = Percentage,
   title = "Timeseries of overall care rated positive",
   x_lab = "Year",
-  y_lab = "Percentage (%)"
-)+
+  y_lab = "Percentage (%)",
+  )+
   scale_y_continuous(
     limits = c(0, 100),
     breaks = seq(0, 100, 10)
   )+
-  geom_col(fill = "#0b4c0b")+
+  geom_col(fill = "#19AB19")+
   geom_text(
     aes(label = paste0(round(Percentage, 0), "%")),
     vjust = 2,
@@ -756,10 +754,10 @@ overall_care_scotland_timeseries_line <- make_scatter(
   y_lab = "Percentage (%)",
   x_lab = "Year"
   )+
-  geom_line(colour = "#0b4c0b",
+  geom_line(colour = "#19AB19",
             aes(group = 2), 
             linewidth = 2, ) +
-  geom_point(size = 4, colour = "#0b4c0b")+
+  geom_point(size = 4, colour = "#19AB19")+
   geom_text(
     aes(
       label = paste0(round(Percentage, 0), "%")),
