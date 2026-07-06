@@ -61,10 +61,8 @@ informed_choice_HSCP <- HSCP %>%
   filter(
     `Question Number` == "q16m",
     `Response Option` =="positive") %>%
-  group_by(`Area`) %>%
-  summarise(percentage_informed_choice_HSCP = sum(Percentage, na.rm = TRUE), 
-            .groups = "drop") %>%
-  arrange(percentage_informed_choice_HSCP) %>%
+  group_by(`Area`) %>% 
+  arrange(Percentage) %>%
   mutate(order = row_number())
 
 # For Health Board
@@ -118,23 +116,19 @@ informed_choice_GP_barchart <- make_barchart_multiple_groups(
   ),
   x_lab = "Percentage (%)",
   y_lab = "Number of GP practices")+
-  geom_point(
-    data = data.frame(
-      pct_band = scotland_band,
-      n_practices = 1
+  geom_col(fill = "#801650")+
+  geom_text(
+    aes(
+      label = round(n_practices, 0),
+      colour = n_practices < 25,
+      vjust = ifelse(n_practices < 25, -0.5, 2)
     ),
-    aes(x = pct_band, y = scotland_y),
-    colour = "red",
-    size = 4
-  )+
-  annotate(
-    "text",
-    x = scotland_band,
-    y = scotland_y,
-    label = paste0("Scottish average ", round(informed_choice_scotland, 0), "%"),
-    vjust = -0.8,
-    colour = "red",
-    fontface = "bold"
+    size = 4,
+    show.legend = FALSE
+  ) +
+  scale_colour_manual(
+    values = c("FALSE" = "white",
+               "TRUE" = "black")
   )
 informed_choice_GP_barchart
 save_plot_with_script_name(informed_choice_GP_barchart)
@@ -240,197 +234,196 @@ informed_choice_HSCP_barchart <- make_barchart_multiple_groups(
   )
 informed_choice_HSCP_barchart
 save_plot_with_script_name(informed_choice_HSCP_barchart)
+################################################################################
+#Geographical variation 
+
+HSCP_barchart <- make_barchart_multiple_groups(
+  data = informed_choice_HSCP ,
+  x_var = Percentage,
+  y_var = reorder(Area, Percentage),
+  title = "Percentage by HSCP",
+  x_lab = "Percentage (%)",
+  y_lab = ""
+)+
+  geom_col(fill = "#801650")+
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100),
+    expand = expansion(mult = c(0, 0.05))
+  )
+HSCP_barchart
+save_plot_with_script_name(HSCP_barchart,
+                           width = 15.68,
+                           height = 11.85)
+
+
+################################################################################
+##-----------------------------------------------------------------------------#
+
 
 ################################################################################
 ##-----------------------------------------------------------------------------#
 # Barchart of Scotland average answer by sex #
-informed_choice_scotland_by_sex <- Sex_joined %>%
+informed_choice_scotland_by_sex <- Sex %>%
   filter(
     `Question Number` == "q16m",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Sex`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_informed_choice = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Sex`)
 
 informed_choice_scotland_by_sex_barchart <- make_barchart_multiple_groups(
-  data = informed_choice_scotland_by_sex %>% 
-    filter(Sex != "Scotland Total"),
-  x_var = Sex,
-  y_var = percentage_informed_choice,
+  data = informed_choice_scotland_by_sex,
+  x_var = Percentage,
+  y_var = reorder(Sex, Percentage),
   title = str_wrap(
     "The percentage of respondents responding positively to, 'I felt able to  make an informed choice about my treatment and care' by sex",
     width = 60
   ), 
   x_lab = "Sex", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = informed_choice_scotland,
-    linetype = "dashed",
-    colour = "red"
+  y_lab = "Percentage (%)",
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = informed_choice_scotland,
-    label = paste0("Scottish average: ", round(informed_choice_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1, 
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+    geom_errorbar(
+      aes(
+        xmin = `Lower 95% Confidence Interval`,
+        xmax = `Upper 95% Confidence Interval`
+      ),
+      width = 0.2,
+      linewidth = 0.5,
+      colour = "black"
+    ) +
+    geom_text(
+      aes(label = paste0(round(Percentage, 0), "%")),
+      hjust = 1.5,
+      size = 4,
+      colour = "white"
+    )+
+    scale_x_continuous(limits = c(0,100))+
+    scale_y_discrete(
+      labels = stringr::str_to_title
+    )
 informed_choice_scotland_by_sex_barchart
 save_plot_with_script_name(informed_choice_scotland_by_sex_barchart)
 
 ## Barchart of Scotland average answer by Age band #
-informed_choice_scotland_by_age <- Age_band_joined %>%
+informed_choice_scotland_by_age <- `Age Band` %>%
   filter(
     `Question Number` == "q16m",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Age Band`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_informed_choice = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Age Band`)
 
 informed_choice_scotland_by_age_barchart <- make_barchart_multiple_groups(
-  data = informed_choice_scotland_by_age %>% 
-    filter(`Age Band` != "Scotland Total"),
-  x_var = `Age Band`,
-  y_var = percentage_informed_choice,
+  data = informed_choice_scotland_by_age,
+  x_var = Percentage,
+  y_var = `Age Band`,
   title = str_wrap(
     "The percentage of respondents responding positively to, 'I felt able to  make an informed choice about my treatment and care' by age",
     width = 60
   ), 
-  x_lab = "Age", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = informed_choice_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)",
+  y_lab = "Age Band",
+  bar_width = 0.75,
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = 2,
-    y = informed_choice_scotland,
-    label = paste0("Scottish average: ", round(informed_choice_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1, 
-    colour = "red"
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
   ) +
-  coord_cartesian(clip = "off")
+  scale_x_continuous(limits = c(0,100))+
+  scale_y_discrete(limits = rev)
+  
 informed_choice_scotland_by_age_barchart
 save_plot_with_script_name(informed_choice_scotland_by_age_barchart)
 
 # Barchart of Scotland average answer by SIMD #
-informed_choice_scotland_by_SIMD <- SIMD_joined %>%
+informed_choice_scotland_by_SIMD <- SIMD %>%
   filter(
     `Question Number` == "q16m",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Scottish Index of Multiple Deprivation Decile`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_informed_choice = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Scottish Index of Multiple Deprivation Decile`) 
 
 informed_choice_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
-  data = informed_choice_scotland_by_SIMD %>% 
-    filter(`Scottish Index of Multiple Deprivation Decile` != "Scotland Total"),
-  x_var = reorder(
+  data = informed_choice_scotland_by_SIMD,
+  x_var = Percentage,
+  y_var = reorder(
     `Scottish Index of Multiple Deprivation Decile`,
-    as.numeric(sub("^([0-9]+).*", "\\1",
+    11-as.numeric(sub("^([0-9]+).*", "\\1",
                    `Scottish Index of Multiple Deprivation Decile`))
   ),
-  y_var = percentage_informed_choice,
   title = str_wrap(
     "The percentage of respondents responding positively to, 'I felt able to  make an informed choice about my treatment and care' by SIMD",
     width = 60
   ), 
-  x_lab = "SIMD", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = informed_choice_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)", 
+  y_lab = "SIMD decile",
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = 3,
-    y = informed_choice_scotland,
-    label = paste0("Scottish average: ", round(informed_choice_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1, 
-    colour = "red"
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
   ) +
-  coord_cartesian(clip = "off")
+  scale_x_continuous(limits = c(0,100))
 informed_choice_scotland_by_SIMD_barchart
 save_plot_with_script_name(informed_choice_scotland_by_SIMD_barchart)
 
 # Barchart of Scotland average answer by Urban 8 #
-informed_choice_scotland_by_urban <- Urban_Rural_8_joined %>%
+informed_choice_scotland_by_urban <- `Urban-Rural 8` %>%
   filter(
     `Question Number` == "q16m",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Urban-Rural 8-fold classification`) %>%
-  mutate(
-    `Urban-Rural 8-fold classification` =
-      ifelse(
-        grepl("^[2-7] ", `Urban-Rural 8-fold classification`),
-        sub("^([2-7]).*", "\\1", `Urban-Rural 8-fold classification`),
-        `Urban-Rural 8-fold classification`
-      )) %>% 
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_informed_choice = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Urban-Rural 8-fold classification`)
 
 informed_choice_scotland_by_urban_barchart <- make_barchart_multiple_groups(
-  data = informed_choice_scotland_by_urban %>% 
-    filter(`Urban-Rural 8-fold classification` != "Scotland Total"),
-  x_var = `Urban-Rural 8-fold classification`,
-  y_var = percentage_informed_choice,
+  data = informed_choice_scotland_by_urban,
+  x_var = Percentage,
+  y_var = factor(
+    `Urban-Rural 8-fold classification`,
+    levels = rev(sort(unique(`Urban-Rural 8-fold classification`)))
+  ),
   title = str_wrap(
     "The percentage of respondents responding positively to, 'I felt able to  make an informed choice about my treatment and care' by Urban-Rural 8",
     width = 60
   ), 
-  x_lab = "Urban-Rural 8-fold classification", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = informed_choice_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)",
+  y_lab = "", 
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = 3,
-    y = informed_choice_scotland,
-    label = paste0("Scottish average: ", round(informed_choice_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1.5, 
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100),
+    expand = expansion(mult = c(0, 0.05))
+  )
 informed_choice_scotland_by_urban_barchart
 save_plot_with_script_name(informed_choice_scotland_by_urban_barchart)
 
@@ -539,50 +532,46 @@ save_plot_with_script_name(informed_choice_scotland_by_long_term_barchart)
 informed_choice_scotland_by_sexual_orientation <- `Sexual Orientation` %>% 
   filter(
     `Question Number` == "q16m",
-    `Response Option` =="positive"
+    `Response Option` =="positive",
+    `By Question Response Option`!= "Skipped Q43"
   ) %>%
   group_by(`By Question Response Option`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_informed_choice = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
+  mutate(
+    `By Question Response Option` =
+      forcats::fct_reorder(
+        `By Question Response Option`,
+        Percentage,
+        .desc = TRUE
+      )
   )
 
 
 informed_choice_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_groups(
-  data = informed_choice_scotland_by_sexual_orientation %>% 
-    mutate(`By Question Response Option` = 
-             forcats::fct_reorder(`By Question Response Option`,
-                                  percentage_informed_choice,
-                                  .desc = TRUE) %>%
-             forcats::fct_relevel("Skipped Q43", after = Inf)
-    ),
-  x_var = `By Question Response Option`,
-  y_var = percentage_informed_choice,
+  data = informed_choice_scotland_by_sexual_orientation,
+  x_var = Percentage,
+  y_var = reorder(`By Question Response Option`,Percentage),
   title = str_wrap(
     "The percentage responding positively to, 'I felt able to  make an informed choice about my treatment and care' by sexual orientation",
     width = 60
   ), 
-  x_lab = "Which of the following best describes your sexual orientation?", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = informed_choice_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)", 
+  y_lab = "Sexual orientation",
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = informed_choice_scotland,
-    label = paste0("Scottish average: ", round(informed_choice_scotland, 1), "%"),
-    hjust = 1,
-    vjust = -2,
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100),
+    expand = expansion(mult = c(0, 0.05))
+  )
 
 informed_choice_scotland_by_sexual_orientation_barchart
 save_plot_with_script_name(informed_choice_scotland_by_sexual_orientation_barchart)
@@ -642,7 +631,7 @@ save_plot_with_script_name(informed_choice_scotland_by_ethnicity_barchart)
 ###############################################################################
 ## Comparing to the last surveys results at Scotland level ##
 ## Cleaning 2021 results
-informed_choice_scotland_2021 <- `Scotland - PNN Questions` %>% 
+informed_choice_scotland_2022 <- `Scotland - PNN Questions` %>% 
   filter(
     `Question Number` == "13l"
   )%>%
@@ -655,12 +644,12 @@ informed_choice_scotland_2021 <- `Scotland - PNN Questions` %>%
   mutate(
     `Response Option` = gsub("% ", "", `Response Option`),
     `Response Option` = tolower(`Response Option`),
-    "Year"= "2021",
+    "Year"= "2021-22",
     Percentage = as.numeric(as.character(Percentage))
   )
 
 ## Cleaning 2023 results
-informed_choice_scotland_2023 <- `Positive, Neutral or Negative` %>% 
+informed_choice_scotland_2024 <- `Positive, Neutral or Negative` %>% 
   filter(
     `Geography Type` == "Scotland",
     `Question Number` == "q16m"
@@ -678,25 +667,25 @@ informed_choice_scotland_2023 <- `Positive, Neutral or Negative` %>%
   mutate(
     `Response Option` = gsub("Percentage ", "", `Response Option`),
     `Response Option` = tolower(`Response Option`),
-    "Year"= "2023",
+    "Year"= "2023-24",
     Percentage = as.numeric(as.character(Percentage))
   ) %>% 
   mutate(Percentage = Percentage*100)
 
-informed_choice_scotland_2025 <- Scotland %>%
+informed_choice_scotland_2026 <- Scotland %>%
   filter(
     `Question Number` == "q16m",
     `Response Option`=="positive"
   ) %>% 
   mutate(
-    "Year"="2025"
+    "Year"="2025-26"
   )%>% 
   select(-c("Topic", "Lower 95% Confidence Interval", "Upper 95% Confidence Interval"))
 
 informed_choice_scotland_timeseries <- bind_rows(
-  informed_choice_scotland_2021,
-  informed_choice_scotland_2023,
-  informed_choice_scotland_2025,
+  informed_choice_scotland_2022,
+  informed_choice_scotland_2024,
+  informed_choice_scotland_2026,
   ) %>%
   mutate(`Response Option` = as.factor(`Response Option`))
 
@@ -714,11 +703,14 @@ informed_choice_scotland_timeseries_barchart <- make_barchart_multiple_groups(
     limits = c(0, 100),
     breaks = seq(0, 100, 10)
   )+
+  geom_col(
+    fill = "#801650"
+  )+
   geom_text(
     aes(label = paste0(round(Percentage, 0), "%")),
     vjust = 2,
     size = 3,
-    colour = "white"
+    colour = "black"
   )
 informed_choice_scotland_timeseries_barchart
 save_plot_with_script_name(informed_choice_scotland_timeseries_barchart)
@@ -730,13 +722,18 @@ informed_choice_scotland_timeseries_scatter <- make_scatter(
   title = "Timeseries of informed choice rated positive",
   y_lab = "Percentage (%)",
   x_lab = "Year"
-)+
-  geom_line(aes(group = 1), linewidth = 1) +
+  )+
+  geom_line(
+    colour = "#801650",
+    aes(group = 2), 
+    linewidth = 2, 
+    ) +
+  geom_point(size = 4, colour = "#801650")+
   geom_text(
     aes(
       label = paste0(round(Percentage, 0), "%")),
     vjust = -0.9,
-    size = 3
+    size = 4
   )
 informed_choice_scotland_timeseries_scatter
 save_plot_with_script_name(informed_choice_scotland_timeseries_scatter)
