@@ -24,7 +24,9 @@ within_2_days_responses <- c(
 )
 
 # Function that will create folders for the plots and save them to the working directory
-save_plot_with_script_name <- function(plot) {
+save_plot_with_script_name <- function(plot,
+                                       width = 15,
+                                       height = 8) {
   
   script_path <- rstudioapi::getActiveDocumentContext()$path
   script_name <- tools::file_path_sans_ext(basename(script_path))
@@ -58,13 +60,14 @@ save_plot_with_script_name <- function(plot) {
   ggsave(
     filename = file.path(folder_name, paste0(safe_title, ".svg")),
     plot = plot,
-    width = 15,
-    height = 8,
+    width = width,
+    height = height,
     units = "cm"
   )
   
   print(geom_classes)
 }
+``
 
 # Function for creating histograms
 make_histogram <- function(data, 
@@ -155,15 +158,20 @@ make_scatter <- function(data, x_var, y_var, title,
     theme_minimal(base_size = 12)
 }
 
-make_barchart_multiple_groups <- function(data,
-                                          x_var,
-                                          y_var,
-                                          title,
-                                          x_lab = NULL,
-                                          y_lab = NULL) {
+make_barchart_multiple_groups <- function(
+    data,
+    x_var,
+    y_var,
+    title,
+    x_lab = NULL,
+    y_lab = NULL,
+    bar_width = 0.75,
+    bar_colour = "#0b4c0b"
+    ) {
   
   ggplot(data, aes(x = {{x_var}}, y = {{y_var}})) +
-    geom_col() +
+    geom_col(fill = bar_colour,
+             width = bar_width) +
     scale_x_discrete(drop = FALSE) +
     labs(
       title = title,
