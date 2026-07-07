@@ -67,16 +67,6 @@ overall_care_HSCP <- HSCP %>%
     `Question Number` == "q13",
     `Response Option` =="positive") %>%
   group_by(`Area`) 
-# %>%
-  # summarise(
-  #   `Question Number` = first(`Question Number`),
-  #   `Question Text` = first(`Question Text`),
-  #   `Response Option` = "positive",
-  #   percentage_overall_care_HSCP = sum(Percentage, na.rm = TRUE),
-  #   .groups = "drop"
-  # ) %>% 
-  # arrange(percentage_overall_care_HSCP) %>%
-  # mutate(order = row_number())
 
 # For Health Board
 overall_care_HB <- `Health Board` %>%
@@ -300,9 +290,9 @@ overall_care_scotland_by_sex_barchart <- make_barchart_multiple_groups(
     width = 60
   ),   
   x_lab = "Percentage (%)",
-  y_lab = "Sex", 
-  bar_colour = c("#0b4c0b","#19AB19")
+  y_lab = "Sex" 
   )+
+  geom_col(fill = "#19AB19" )+
   geom_errorbar(
     aes(
       xmin = `Lower 95% Confidence Interval`,
