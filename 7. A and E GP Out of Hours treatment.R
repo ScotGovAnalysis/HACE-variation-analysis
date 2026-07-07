@@ -63,11 +63,7 @@ OOH_care_cluster <- `GP Cluster` %>%
     `Question Number` == "q24c",
     `Response Option` =="positive",
     !is.na(Percentage)) %>%
-  group_by(`Area`) %>%
-  summarise(percentage_OOH_care_cluster = sum(Percentage, na.rm = TRUE), 
-            .groups = "drop") %>%
-  arrange(percentage_OOH_care_cluster) %>%
-  mutate(order = row_number())
+  group_by(`Area`)
 
 # For Health and Social Care partnerships
 OOH_care_HSCP <- HSCP %>%
@@ -92,65 +88,55 @@ OOH_care_HB <- `Health Board` %>%
   mutate(order = row_number())
 ################################################################################
 ## Barchart of urgent access national level ------------------------------------
-bands <- paste0(seq(0, 90, 10), "-", seq(10, 100, 10))
+bands <- paste0(
+  seq(0, 95, 5),
+  "-",
+  seq(5, 100, 5))
 
-scotland_band <- cut(
-  OOH_care_scotland,
-  breaks = seq(0, 100, by = 10),
-  labels = bands,
-  include.lowest = TRUE,
-  right = FALSE
-)
-
-# By Cluster
 OOH_care_cluster_binned <- OOH_care_cluster %>%
+  ungroup() %>%
   mutate(
     pct_band = cut(
-      percentage_OOH_care_cluster,
-      breaks = seq(0, 100, by = 10),
+      Percentage,
+      breaks = seq(0, 100, 5),
       labels = bands,
       include.lowest = TRUE,
       right = FALSE
     )
   ) %>%
-  count(pct_band, name = "n_practices") %>%
-  complete(pct_band = bands, fill = list(n_practices = 0)) %>%
-  mutate(pct_band = factor(pct_band, levels = bands))
-
-scotland_y <- OOH_care_cluster_binned %>%
-  filter(pct_band == scotland_band) %>%
-  pull(n_practices)
+  count(pct_band, name = "n_clusters") %>%
+  complete(
+    pct_band = factor(bands, levels = bands),
+    fill = list(n_clusters = 0)
+  )
 
 
 OOH_care_cluster_barchart <- make_barchart_multiple_groups(
   data = OOH_care_cluster_binned,
   x_var = pct_band,
-  y_var = n_practices,
+  y_var = n_clusters,
   title = str_wrap(
-    "% responding positively to, 'I was treated with compassion and understanding' during A and E or GP OOH care.' by GP cluster",
+    "% responding positively to 'I was treated with compassion and understanding' during A&E or GP OOH care by GP cluster",
     width = 60
   ),
   x_lab = "Percentage (%)",
-  y_lab = "Number of GP clusters")+
-  geom_point(
-    data = data.frame(
-      pct_band = scotland_band,
-      n_practices = 1
-    ),
-    aes(x = pct_band, y = scotland_y),
-    colour = "red",
-    size = 4
-  )+
-  annotate(
-    "text",
-    x = scotland_band,
-    y = scotland_y,
-    label = paste0("Scottish average ", round(OOH_care_scotland, 0), "%"),
-    vjust = -0.8,
-    colour = "red",
-    fontface = "bold"
-  )+ 
-  labs(caption = "Note: One response removed as disclosive")
+  y_lab = "Number of GP clusters",
+  bar_colour = "#801650"
+)+
+geom_text(
+aes(
+  label = round(n_clusters, 0),
+  colour = n_clusters < 25,
+  vjust = ifelse(n_clusters < 25, -0.5, 2)
+),
+size = 4,
+show.legend = FALSE
+) +
+scale_colour_manual(
+values = c("FALSE" = "white",
+           "TRUE" = "black")
+)
+
 OOH_care_cluster_barchart
 save_plot_with_script_name(OOH_care_cluster_barchart)
 
@@ -208,193 +194,158 @@ save_plot_with_script_name(OOH_care_HSCP_barchart)
 ################################################################################
 ##-----------------------------------------------------------------------------#
 # Barchart of Scotland average answer by sex #
-OOH_care_scotland_by_sex <- Sex_joined %>%
+OOH_care_scotland_by_sex <- Sex %>%
   filter(
     `Question Number` == "q24c",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Sex`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_OOH_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Sex`)
 
 OOH_care_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   data = OOH_care_scotland_by_sex %>% 
     filter(Sex != "Scotland Total"),
-  x_var = Sex,
-  y_var = percentage_OOH_care,
+  x_var = Percentage,
+  y_var = Sex,
   title = str_wrap(
     "% responding positively to 'I was treated with compassion and understanding' during A and E or GP OOH care.' by sex",
     width = 60
   ), 
-  x_lab = "Sex", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = OOH_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)", 
+  y_lab = "Sex",
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = OOH_care_scotland,
-    label = paste0("Scottish average: ", round(OOH_care_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1, 
-    colour = "red"
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
   ) +
-  coord_cartesian(clip = "off")
+  geom_text(
+    aes(label = paste0(round(Percentage, 0), "%")),
+    hjust = 1.5,
+    size = 4,
+    colour = "white"
+  )+
+  scale_x_continuous(limits = c(0,100))+
+  scale_y_discrete(
+    labels = stringr::str_to_title
+  )
 OOH_care_scotland_by_sex_barchart
 save_plot_with_script_name(OOH_care_scotland_by_sex_barchart)
 
 ## Barchart of Scotland average answer by Age band #
-OOH_care_scotland_by_age <- Age_band_joined %>%
+OOH_care_scotland_by_age <- `Age Band` %>%
   filter(
     `Question Number` == "q24c",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Age Band`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_OOH_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Age Band`)
 
 OOH_care_scotland_by_age_barchart <- make_barchart_multiple_groups(
-  data = OOH_care_scotland_by_age %>% 
-    filter(`Age Band` != "Scotland Total"),
-  x_var = `Age Band`,
-  y_var = percentage_OOH_care,
+  data = OOH_care_scotland_by_age,
+  x_var = Percentage,
+  y_var = `Age Band`,
   title = str_wrap(
     "% responding positively to 'I was treated with compassion and understanding' during A and E or GP OOH care.' by age",
     width = 60
   ), 
-  x_lab = "Age", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = OOH_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)", 
+  y_lab = "Age Band",
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = 2,
-    y = OOH_care_scotland,
-    label = paste0("Scottish average: ", round(OOH_care_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1, 
-    colour = "red"
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
   ) +
-  coord_cartesian(clip = "off")
+  scale_x_continuous(limits = c(0,100))+
+  scale_y_discrete(limits = rev)
+
 OOH_care_scotland_by_age_barchart
 save_plot_with_script_name(OOH_care_scotland_by_age_barchart)
 
 # Barchart of Scotland average answer by SIMD #
-OOH_care_scotland_by_SIMD <- SIMD_joined %>%
+OOH_care_scotland_by_SIMD <- SIMD %>%
   filter(
     `Question Number` == "q24c",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Scottish Index of Multiple Deprivation Decile`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_OOH_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Scottish Index of Multiple Deprivation Decile`)
 
 OOH_care_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
-  data = OOH_care_scotland_by_SIMD %>% 
-    filter(`Scottish Index of Multiple Deprivation Decile` != "Scotland Total"),
-  x_var = reorder(
+  data = OOH_care_scotland_by_SIMD,
+  x_var = Percentage,
+  y_var = reorder(
     `Scottish Index of Multiple Deprivation Decile`,
-    as.numeric(sub("^([0-9]+).*", "\\1",
+    11-as.numeric(sub("^([0-9]+).*", "\\1",
                    `Scottish Index of Multiple Deprivation Decile`))
   ),
-  y_var = percentage_OOH_care,
   title = str_wrap(
     "% responding positively to 'I was treated with compassion and understanding' during A and E or GP OOH care.' by SIMD",
     width = 60
   ), 
   x_lab = "SIMD", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = OOH_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  y_lab = "Percentage (%)",
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = 3,
-    y = OOH_care_scotland,
-    label = paste0("Scottish average: ", round(OOH_care_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1, 
-    colour = "red"
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
   ) +
-  coord_cartesian(clip = "off")
+  scale_x_continuous(limits = c(0,100),
+                     expand = c(0, 0))
 OOH_care_scotland_by_SIMD_barchart
 save_plot_with_script_name(OOH_care_scotland_by_SIMD_barchart)
 
 # Barchart of Scotland average answer by Urban 8 #
-OOH_care_scotland_by_urban <- Urban_Rural_8_joined %>%
+OOH_care_scotland_by_urban <- `Urban-Rural 8` %>%
   filter(
     `Question Number` == "q24c",
     `Response Option` =="positive"
   ) %>%
-  group_by(`Urban-Rural 8-fold classification`) %>%
-  mutate(
-    `Urban-Rural 8-fold classification` =
-      ifelse(
-        grepl("^[2-7] ", `Urban-Rural 8-fold classification`),
-        sub("^([2-7]).*", "\\1", `Urban-Rural 8-fold classification`),
-        `Urban-Rural 8-fold classification`
-      )) %>% 
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_OOH_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`Urban-Rural 8-fold classification`)
 
 OOH_care_scotland_by_urban_barchart <- make_barchart_multiple_groups(
-  data = OOH_care_scotland_by_urban %>% 
-    filter(`Urban-Rural 8-fold classification` != "Scotland Total"),
-  x_var = `Urban-Rural 8-fold classification`,
-  y_var = percentage_OOH_care,
+  data = OOH_care_scotland_by_urban,
+  x_var = Percentage, 
+  y_var = factor(
+    `Urban-Rural 8-fold classification`,
+    levels = rev(sort(unique(`Urban-Rural 8-fold classification`)))
+  ),
   title = str_wrap(
     "% responding positively to 'I was treated with compassion and understanding' during A and E or GP OOH care.' by Urban-Rural 8",
     width = 60
   ), 
   x_lab = "Urban-Rural 8-fold classification", 
-  y_lab = "Percentage (%)"
+  y_lab = "Percentage (%)", 
+  bar_colour = "#801650"
 )+
-  geom_hline(
-    yintercept = OOH_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
   )+
-  annotate(
-    "text",
-    x = 3,
-    y = OOH_care_scotland,
-    label = paste0("Scottish average: ", round(OOH_care_scotland, 0), "%"),
-    hjust = 1,
-    vjust = -1.5, 
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100),
+    expand = expansion(mult = c(0, 0.05))
+  )
 OOH_care_scotland_by_urban_barchart
 save_plot_with_script_name(OOH_care_scotland_by_urban_barchart)
 
@@ -403,150 +354,111 @@ save_plot_with_script_name(OOH_care_scotland_by_urban_barchart)
 OOH_care_scotland_by_chronic_pain <- `Chronic Pain` %>% 
   filter(
     `Question Number` == "q24c",
-    `Response Option` =="positive"
+    `Response Option` =="positive",
+    `By Question Response Option` != "Skipped Q42"
   ) %>%
-  group_by(`By Question Response Option`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_OOH_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`By Question Response Option`)
 
 
 OOH_care_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
-  data = OOH_care_scotland_by_chronic_pain %>% 
-    mutate(`By Question Response Option` = factor(
-      `By Question Response Option`,
-      levels = c("Yes", "No", "Skipped Q42")
-    )),
-  x_var = `By Question Response Option`,
-  y_var = percentage_OOH_care,
+  data = OOH_care_scotland_by_chronic_pain,
+  x_var = Percentage,
+  y_var = `By Question Response Option`,
   title = str_wrap(
     "% responding positively to 'I was treated with compassion and understanding' during A and E or GP OOH care.' by Chronic pain",
     width = 60
   ), 
-  x_lab = "Do you suffer from chronic or persistent pain, that is pain that carries on for longer than 3 months despite medication or treatment?", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = OOH_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)", 
+  y_lab = "Experienced chronic pain?",
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = OOH_care_scotland,
-    label = paste0("Scottish average: ", round(OOH_care_scotland, 1), "%"),
-    hjust = 1,
-    vjust = -2,
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
-
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100))
 
 OOH_care_scotland_by_chronic_pain_barchart
-save_plot_with_script_name(OOH_care_scotland_by_chronic_pain_barchart)
+save_plot_with_script_name(OOH_care_scotland_by_chronic_pain_barchart, width = 11,height = 5)
 
 ##  Barchart by Long term condition ##
 OOH_care_scotland_by_long_term <- `Long-Term Condition` %>% 
   filter(
     `Question Number` == "q24c",
-    `Response Option` =="positive"
+    `Response Option` =="positive",
+    `By Question Response Option` != "Skipped Question"
   ) %>%
-  group_by(`By Question Response Option`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_OOH_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`By Question Response Option`) 
 
 
 OOH_care_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
-  data = OOH_care_scotland_by_long_term %>% 
-    mutate(`By Question Response Option` = factor(
-      `By Question Response Option`,
-      levels = c("Yes", "No", "Skipped Question")
-    )),
-  x_var = `By Question Response Option`,
-  y_var = percentage_OOH_care,
+  data = OOH_care_scotland_by_long_term,
+  x_var = Percentage,
+  y_var = `By Question Response Option`,
   title = str_wrap(
     "% responding positively to 'I was treated with compassion and understanding' during A and E or GP OOH care.' by long term",
     width = 60
-  ), 
-  x_lab = "Do you have any physical or mental health conditions or illnesses lasting or expected to last 12 months or more?", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = OOH_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  ),
+  x_lab = "Percentage (%)",
+  y_lab = "Long term condition?",
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = OOH_care_scotland,
-    label = paste0("Scottish average: ", round(OOH_care_scotland, 1), "%"),
-    hjust = 1,
-    vjust = -2,
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100))
+
 OOH_care_scotland_by_long_term_barchart
-save_plot_with_script_name(OOH_care_scotland_by_long_term_barchart)
+save_plot_with_script_name(OOH_care_scotland_by_long_term_barchart,width = 11,height = 5)
 
 ## Barchart  by Sexual Orientation ##
 OOH_care_scotland_by_sexual_orientation <- `Sexual Orientation` %>% 
   filter(
     `Question Number` == "q24c",
-    `Response Option` =="positive"
+    `Response Option` =="positive",
+    `By Question Response Option` != "Skipped Q43"
   ) %>%
-  group_by(`By Question Response Option`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_OOH_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
-
+  group_by(`By Question Response Option`) 
 
 OOH_care_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_groups(
-  data = OOH_care_scotland_by_sexual_orientation %>% 
-    mutate(`By Question Response Option` = 
-             forcats::fct_reorder(`By Question Response Option`,
-                                  percentage_OOH_care,
-                                  .desc = TRUE) %>%
-             forcats::fct_relevel("Skipped Q43", after = Inf)
-    ),
-  x_var = `By Question Response Option`,
-  y_var = percentage_OOH_care,
+  data = OOH_care_scotland_by_sexual_orientation,
+  x_var = Percentage, 
+  y_var = reorder(`By Question Response Option`,Percentage),
   title = str_wrap(
     "% responding 'I was treated with compassion and understanding' during A and E or GP OOH care.' by sexual orientation",
     width = 60
   ), 
-  x_lab = "Which of the following best describes your sexual orientation?", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = OOH_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)", 
+  y_lab = "Sexual Orientation",
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = OOH_care_scotland,
-    label = paste0("Scottish average: ", round(OOH_care_scotland, 1), "%"),
-    hjust = 1,
-    vjust = -2,
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100))
 
 OOH_care_scotland_by_sexual_orientation_barchart
 save_plot_with_script_name(OOH_care_scotland_by_sexual_orientation_barchart)
@@ -555,58 +467,43 @@ save_plot_with_script_name(OOH_care_scotland_by_sexual_orientation_barchart)
 OOH_care_scotland_by_ethnicity <- Ethnicity %>% 
   filter(
     `Question Number` == "q24c",
-    `Response Option` =="positive"
+    `Response Option` =="positive",
+    `By Question Response Option`!= "Skipped Q44"
   ) %>%
-  group_by(`By Question Response Option`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_OOH_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`By Question Response Option`) 
 
 OOH_care_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
-  data = OOH_care_scotland_by_ethnicity %>% 
-    mutate(
-      `By Question Response Option` = 
-        forcats::fct_reorder(`By Question Response Option`,
-                             percentage_OOH_care,
-                             .desc = TRUE) %>%
-        forcats::fct_relevel("Skipped Q44", after = Inf)
-    ),
-  x_var = `By Question Response Option`,
-  y_var = percentage_OOH_care,
+  data = OOH_care_scotland_by_ethnicity, 
+  x_var = Percentage,
+  y_var = `By Question Response Option`,
   title = str_wrap(
     "% responding 'I was treated with compassion and understanding' during A and E or GP OOH care.' by ethnicity",
     width = 60
-  ), 
-  x_lab = "What is your ethnic group?", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = OOH_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  ),
+  x_lab = "Percentage (%)",
+  y_lab = "What is your ethnic group?", 
+  bar_colour = "#801650"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = OOH_care_scotland,
-    label = paste0("Scottish average: ", round(OOH_care_scotland, 1), "%"),
-    hjust = 1,
-    vjust = -2,
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100))
 
 OOH_care_scotland_by_ethnicity_barchart
-save_plot_with_script_name(OOH_care_scotland_by_ethnicity_barchart)
+save_plot_with_script_name(OOH_care_scotland_by_ethnicity_barchart, width = 11,height = 5)
 
 ###############################################################################
 ## Comparing to the last surveys results at Scotland level ##
 ## Cleaning 2021 results
-OOH_care_scotland_2021 <- `Scotland - PNN Questions` %>% 
+OOH_care_scotland_2022 <- `Scotland - PNN Questions` %>% 
   filter(
     `Question Number` == "26c"
   )%>%
@@ -619,12 +516,12 @@ OOH_care_scotland_2021 <- `Scotland - PNN Questions` %>%
   mutate(
     `Response Option` = gsub("% ", "", `Response Option`),
     `Response Option` = tolower(`Response Option`),
-    "Year"= "2021",
+    "Year"= "2021-22",
     Percentage = as.numeric(as.character(Percentage))
   )
 
 ## Cleaning 2023 results
-OOH_care_scotland_2023 <- `Positive, Neutral or Negative` %>% 
+OOH_care_scotland_2024 <- `Positive, Neutral or Negative` %>% 
   filter(
     `Geography Type` == "Scotland",
     `Question Number` == "q24c"
@@ -642,25 +539,25 @@ OOH_care_scotland_2023 <- `Positive, Neutral or Negative` %>%
   mutate(
     `Response Option` = gsub("Percentage ", "", `Response Option`),
     `Response Option` = tolower(`Response Option`),
-    "Year"= "2023",
+    "Year"= "2023-24",
     Percentage = as.numeric(as.character(Percentage))
   ) %>% 
   mutate(Percentage = Percentage*100)
 
-OOH_care_scotland_2025 <- Scotland %>%
+OOH_care_scotland_2026 <- Scotland %>%
   filter(
     `Question Number` == "q24c",
     `Response Option`== "positive"
   ) %>% 
   mutate(
-    "Year"="2025"
+    "Year"="2025-26"
   )%>% 
   select(-c("Topic", "Lower 95% Confidence Interval", "Upper 95% Confidence Interval"))
 
 OOH_care_scotland_timeseries <- bind_rows(
-  OOH_care_scotland_2021,
-  OOH_care_scotland_2023,
-  OOH_care_scotland_2025,
+  OOH_care_scotland_2022,
+  OOH_care_scotland_2024,
+  OOH_care_scotland_2026,
   # 2019 row
   tibble(
     `Question Number` = rep("20",2),
@@ -669,7 +566,7 @@ OOH_care_scotland_timeseries <- bind_rows(
     `Response Option` = rep(c("positive"),2),
     `Percentage` = c(84, #2019
                      86),#2017
-    `Year` = c("2019","2017")
+    `Year` = c("2019-20","2017-18")
   )
 ) %>%
   mutate(`Response Option` = as.factor(`Response Option`))
@@ -704,13 +601,18 @@ OOH_care_scotland_timeseries_scatter <- make_scatter(
   title = "Timeseries of OOH care rated positive",
   y_lab = "Percentage (%)",
   x_lab = "Year"
-)+
-  geom_line(aes(group = 1), linewidth = 1) +
+  )+
+  geom_line(
+    colour = "#801650",
+    aes(group = 2), 
+    linewidth = 2, 
+  ) +
+  geom_point(size = 4, colour = "#801650")+
   geom_text(
     aes(
       label = paste0(round(Percentage, 0), "%")),
     vjust = -0.9,
-    size = 3
+    size = 4
   )
 OOH_care_scotland_timeseries_scatter
 save_plot_with_script_name(OOH_care_scotland_timeseries_scatter)
