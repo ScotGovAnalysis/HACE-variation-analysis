@@ -67,7 +67,6 @@ save_plot_with_script_name <- function(plot,
   
   print(geom_classes)
 }
-``
 
 # Function for creating histograms
 make_histogram <- function(data, 
@@ -102,10 +101,17 @@ make_boxplot_multiple_groups <- function(data,
                                          y_var,
                                          title,
                                          x_lab = NULL,
-                                         y_lab = NULL) {
+                                         y_lab = NULL,
+                                         bar_width = 0.9,
+                                         bar_colour = NULL) {
   
   ggplot(data, aes(x = {{x_var}}, y = {{y_var}})) +
     geom_boxplot() +
+    geom_col(
+      fill = bar_colour,
+      width = bar_width
+    ) +
+    
     labs(
       title = title,
       x = x_lab,
