@@ -116,7 +116,7 @@ informed_choice_GP_barchart <- make_barchart_multiple_groups(
   ),
   x_lab = "Percentage (%)",
   y_lab = "Number of GP practices")+
-  geom_col(fill = "#801650")+
+  geom_col(fill = "#D071A7")+
   geom_text(
     aes(
       label = round(n_practices, 0),
@@ -188,7 +188,7 @@ save_plot_with_script_name(informed_choice_cluster_barchart)
 informed_choice_HSCP_binned <- informed_choice_HSCP %>%
   mutate(
     pct_band = cut(
-      percentage_informed_choice_HSCP,
+      Percentage,
       breaks = seq(0, 100, by = 10),
       labels = bands,
       include.lowest = TRUE,
@@ -245,7 +245,7 @@ HSCP_barchart <- make_barchart_multiple_groups(
   x_lab = "Percentage (%)",
   y_lab = ""
 )+
-  geom_col(fill = "#801650")+
+  geom_col(fill = "#D071A7")+
   geom_errorbar(
     aes(
       xmin = `Lower 95% Confidence Interval`,
@@ -290,7 +290,7 @@ informed_choice_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Sex", 
   y_lab = "Percentage (%)",
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
     geom_errorbar(
       aes(
@@ -333,7 +333,7 @@ informed_choice_scotland_by_age_barchart <- make_barchart_multiple_groups(
   x_lab = "Percentage (%)",
   y_lab = "Age Band",
   bar_width = 0.75,
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -372,7 +372,7 @@ informed_choice_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "SIMD decile",
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -408,7 +408,7 @@ informed_choice_scotland_by_urban_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)",
   y_lab = "", 
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -556,7 +556,7 @@ informed_choice_scotland_by_sexual_orientation_barchart <- make_barchart_multipl
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "Sexual orientation",
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -704,7 +704,7 @@ informed_choice_scotland_timeseries_barchart <- make_barchart_multiple_groups(
     breaks = seq(0, 100, 10)
   )+
   geom_col(
-    fill = "#801650"
+    fill = "#D071A7"
   )+
   geom_text(
     aes(label = paste0(round(Percentage, 0), "%")),
@@ -724,11 +724,11 @@ informed_choice_scotland_timeseries_scatter <- make_scatter(
   x_lab = "Year"
   )+
   geom_line(
-    colour = "#801650",
+    colour = "#D071A7",
     aes(group = 2), 
     linewidth = 2, 
     ) +
-  geom_point(size = 4, colour = "#801650")+
+  geom_point(size = 4, colour = "#D071A7")+
   geom_text(
     aes(
       label = paste0(round(Percentage, 0), "%")),
