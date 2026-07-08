@@ -70,11 +70,7 @@ OOH_care_HSCP <- HSCP %>%
   filter(
     `Question Number` == "q24c",
     `Response Option` =="positive") %>%
-  group_by(`Area`) %>%
-  summarise(percentage_OOH_care_HSCP = sum(Percentage, na.rm = TRUE), 
-            .groups = "drop") %>%
-  arrange(percentage_OOH_care_HSCP) %>%
-  mutate(order = row_number())
+  group_by(`Area`)
 
 # For Health Board
 OOH_care_HB <- `Health Board` %>%
@@ -88,10 +84,7 @@ OOH_care_HB <- `Health Board` %>%
   mutate(order = row_number())
 ################################################################################
 ## Barchart of urgent access national level ------------------------------------
-bands <- paste0(
-  seq(0, 95, 5),
-  "-",
-  seq(5, 100, 5))
+bands <- paste0(seq(0, 90, 10), "-", seq(10, 100, 10))
 
 OOH_care_cluster_binned <- OOH_care_cluster %>%
   ungroup() %>%
@@ -121,7 +114,7 @@ OOH_care_cluster_barchart <- make_barchart_multiple_groups(
   ),
   x_lab = "Percentage (%)",
   y_lab = "Number of GP clusters",
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
 )+
 geom_text(
 aes(
@@ -142,54 +135,67 @@ save_plot_with_script_name(OOH_care_cluster_barchart)
 
 # By HSCP
 OOH_care_HSCP_binned <- OOH_care_HSCP %>%
+  ungroup() %>% 
   mutate(
     pct_band = cut(
-      percentage_OOH_care_HSCP,
+      Percentage,
       breaks = seq(0, 100, by = 10),
       labels = bands,
       include.lowest = TRUE,
       right = FALSE
     )
   ) %>%
-  count(pct_band, name = "n_practices") %>%
-  complete(pct_band = bands, fill = list(n_practices = 0)) %>%
+  count(pct_band, name = "n_hscps") %>%
+  complete(pct_band = bands, fill = list(n_hscps = 0)) %>%
   mutate(pct_band = factor(pct_band, levels = bands))
 
 scotland_y <- OOH_care_HSCP_binned %>%
   filter(pct_band == scotland_band) %>%
-  pull(n_practices)
+  pull(n_hscps)
 
 
 OOH_care_HSCP_barchart <- make_barchart_multiple_groups(
   data = OOH_care_HSCP_binned,
   x_var = pct_band,
-  y_var = n_practices,
+  y_var = n_hscps,
   title = str_wrap(
     "% responding positively to 'I was treated with compassion and understanding' during A and E or GP OOH care.' by GP HSCP",
     width = 60
   ),
   x_lab = "Percentage (%)",
-  y_lab = "Number of GP HSCPs")+
-  geom_point(
-    data = data.frame(
-      pct_band = scotland_band,
-      n_practices = 1
-    ),
-    aes(x = pct_band, y = scotland_y),
-    colour = "red",
-    size = 4
-  )+
-  annotate(
-    "text",
-    x = scotland_band,
-    y = scotland_y,
-    label = paste0("Scottish average ", round(OOH_care_scotland, 0), "%"),
-    vjust = -0.8,
-    colour = "red",
-    fontface = "bold"
-  )
+  y_lab = "Number of GP HSCPs")
 OOH_care_HSCP_barchart
+
 save_plot_with_script_name(OOH_care_HSCP_barchart)
+
+OOH_care_HSCP_barchart_2 <- make_barchart_multiple_groups(
+  data = OOH_care_HSCP,
+  x_var = Percentage,
+  y_var = reorder(Area, Percentage),
+  title = "Percentage by HSCP",
+  x_lab = "Percentage (%)",
+  y_lab = ""
+)+
+  geom_col(fill = "#D071A7")+
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100),
+    expand = expansion(mult = c(0, 0.05))
+  )
+OOH_care_HSCP_barchart_2
+save_plot_with_script_name(OOH_care_HSCP_barchart_2,
+                           width = 15.7,
+                           height = 12.88)
+
 
 ################################################################################
 ##-----------------------------------------------------------------------------#
@@ -212,7 +218,7 @@ OOH_care_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "Sex",
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -254,7 +260,7 @@ OOH_care_scotland_by_age_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "Age Band",
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -291,9 +297,9 @@ OOH_care_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
     "% responding positively to 'I was treated with compassion and understanding' during A and E or GP OOH care.' by SIMD",
     width = 60
   ), 
-  x_lab = "SIMD", 
-  y_lab = "Percentage (%)",
-  bar_colour = "#801650"
+  y_lab = "SIMD decile", 
+  x_lab = "Percentage (%)",
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -304,10 +310,11 @@ OOH_care_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
     linewidth = 0.5,
     colour = "black"
   ) +
-  scale_x_continuous(limits = c(0,100),
-                     expand = c(0, 0))
+  scale_x_continuous(limits = c(0,100))
+
+  
 OOH_care_scotland_by_SIMD_barchart
-save_plot_with_script_name(OOH_care_scotland_by_SIMD_barchart)
+save_plot_with_script_name(OOH_care_scotland_by_SIMD_barchart, width = 15.25)
 
 # Barchart of Scotland average answer by Urban 8 #
 OOH_care_scotland_by_urban <- `Urban-Rural 8` %>%
@@ -328,9 +335,9 @@ OOH_care_scotland_by_urban_barchart <- make_barchart_multiple_groups(
     "% responding positively to 'I was treated with compassion and understanding' during A and E or GP OOH care.' by Urban-Rural 8",
     width = 60
   ), 
-  x_lab = "Urban-Rural 8-fold classification", 
-  y_lab = "Percentage (%)", 
-  bar_colour = "#801650"
+  y_lab = "Urban-Rural 8-fold classification", 
+  x_lab = "Percentage (%)", 
+  bar_colour = "#D071A7"
 )+
   geom_errorbar(
     aes(
@@ -347,7 +354,7 @@ OOH_care_scotland_by_urban_barchart <- make_barchart_multiple_groups(
     expand = expansion(mult = c(0, 0.05))
   )
 OOH_care_scotland_by_urban_barchart
-save_plot_with_script_name(OOH_care_scotland_by_urban_barchart)
+save_plot_with_script_name(OOH_care_scotland_by_urban_barchart, width = 15.77,height = 10)
 
 ##----------------------------------------------------------------------------#
 ##Barchart by Chronic Pain ##
@@ -370,7 +377,7 @@ OOH_care_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "Experienced chronic pain?",
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -408,7 +415,7 @@ OOH_care_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
   ),
   x_lab = "Percentage (%)",
   y_lab = "Long term condition?",
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -445,7 +452,7 @@ OOH_care_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_group
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "Sexual Orientation",
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -482,7 +489,7 @@ OOH_care_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
   ),
   x_lab = "Percentage (%)",
   y_lab = "What is your ethnic group?", 
-  bar_colour = "#801650"
+  bar_colour = "#D071A7"
   )+
   geom_errorbar(
     aes(
@@ -603,11 +610,11 @@ OOH_care_scotland_timeseries_scatter <- make_scatter(
   x_lab = "Year"
   )+
   geom_line(
-    colour = "#801650",
+    colour = "#D071A7",
     aes(group = 2), 
     linewidth = 2, 
   ) +
-  geom_point(size = 4, colour = "#801650")+
+  geom_point(size = 4, colour = "#D071A7")+
   geom_text(
     aes(
       label = paste0(round(Percentage, 0), "%")),
