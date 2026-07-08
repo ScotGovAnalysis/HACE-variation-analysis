@@ -444,52 +444,40 @@ save_plot_with_script_name(overall_care_scotland_by_urban_barchart)
 overall_care_scotland_by_chronic_pain <- `Chronic Pain` %>% 
   filter(
     `Question Number` == "q13",
-    `Response Option` =="positive"
+    `Response Option` =="positive",
+    `By Question Response Option` != "Skipped Q42"
   ) %>%
-  group_by(`By Question Response Option`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_overall_care = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
-
+  group_by(`By Question Response Option`)
 
 overall_care_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
-  data = overall_care_scotland_by_chronic_pain %>% 
-    mutate(`By Question Response Option` = factor(
-      `By Question Response Option`,
-      levels = c("Yes", "No", "Skipped Q42")
-    )),
-  x_var = `By Question Response Option`,
-  y_var = percentage_overall_care,
+  data = overall_care_scotland_by_chronic_pain,
+  x_var = Percentage,
+  y_var = `By Question Response Option`,
   title = str_wrap(
     "The percentage of respondents who rated the overall care from their General Practice as positive by Chronic pain",
     width = 60
   ), 
-  x_lab = "Do you suffer from chronic or persistent pain, that is pain that carries on for longer than 3 months despite medication or treatment?", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = overall_care_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)",
+  y_lab = "Experienced chronic pain?", 
+  bar_colour = "#19AB19"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = overall_care_scotland,
-    label = paste0("Scottish average: ", round(overall_care_scotland, 1), "%"),
-    hjust = 1,
-    vjust = -2,
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
-
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100),
+    expand = expansion(mult = c(0, 0.05))
+  )
 
 overall_care_scotland_by_chronic_pain_barchart
-save_plot_with_script_name(overall_care_scotland_by_chronic_pain_barchart)
+save_plot_with_script_name(overall_care_scotland_by_chronic_pain_barchart,width = 15,height = 3)
 
 ##  Barchart by Long term condition ##
 overall_care_scotland_by_long_term <- `Long-Term Condition` %>% 
