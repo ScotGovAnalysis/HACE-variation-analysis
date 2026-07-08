@@ -23,17 +23,13 @@ sgplot::use_sgplot()
 #Source function to save plots from utility script
 source("1. Utility.R")
 
-# Summary table showing the percentage of respondents who rated the Ease of contacting 
-# their General Practice as positive for Scotland
+#The percentage of respondents who rated the Ease of contacting their General 
+# Practice as positive for Scotland for current survey year
 easy_contact_scotland <- Scotland %>%
   filter(
     `Question Number` == "q03",
     `Response Option` =="positive") %>%
-  summarise(
-    percentage_easy_contact_scotland = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  pull(percentage_easy_contact_scotland)
+  pull(Percentage)
 
 # For individual GP practices
 easy_contact_GP <- `GP Practice` %>%
@@ -334,8 +330,8 @@ easy_contact_scotland_by_age_barchart <- make_barchart_multiple_groups(
     "The percentage of respondents who rated the ease of their General Practice as positive by age",
     width = 60
   ), 
-  x_lab = "Age", 
-  y_lab = "Percentage (%)",
+  x_lab = "Percentage (%)", 
+  y_lab = "Age Band",
   bar_colour = "#F46A25"
   )+
   geom_errorbar(
@@ -368,7 +364,7 @@ easy_contact_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
   x_var = Percentage,
   y_var = reorder(
     `Scottish Index of Multiple Deprivation Decile`,
-    as.numeric(sub("^([0-9]+).*", "\\1",
+    11-as.numeric(sub("^([0-9]+).*", "\\1",
                    `Scottish Index of Multiple Deprivation Decile`))
   ),
   title = str_wrap(
@@ -388,8 +384,7 @@ easy_contact_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
     linewidth = 0.5,
     colour = "black"
   ) +
-  scale_x_continuous(limits = c(0,100),
-                     expand = c(0, 0))
+  scale_x_continuous(limits = c(0,100))
 
 easy_contact_scotland_by_SIMD_barchart
 save_plot_with_script_name(easy_contact_scotland_by_SIMD_barchart)
