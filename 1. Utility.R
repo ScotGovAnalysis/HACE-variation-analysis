@@ -26,7 +26,8 @@ within_2_days_responses <- c(
 # Function that will create folders for the plots and save them to the working directory
 save_plot_with_script_name <- function(plot,
                                        width = 15,
-                                       height = 8) {
+                                       height = 8,
+                                       show_title = TRUE) {
   
   script_path <- rstudioapi::getActiveDocumentContext()$path
   script_name <- tools::file_path_sans_ext(basename(script_path))
@@ -57,9 +58,16 @@ save_plot_with_script_name <- function(plot,
   full_title <- paste(plot_type, plot_title)
   safe_title <- gsub("[^A-Za-z0-9]", " ", full_title)
   
+  # Remove title from saved version if requested
+  plot_to_save <- if (show_title) {
+    plot
+  } else {
+    plot + labs(title = NULL)
+  }
+  
   ggsave(
     filename = file.path(folder_name, paste0(safe_title, ".svg")),
-    plot = plot,
+    plot = plot_to_save,
     width = width,
     height = height,
     units = "cm"
