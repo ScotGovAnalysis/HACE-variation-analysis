@@ -432,52 +432,39 @@ save_plot_with_script_name(informed_choice_scotland_by_urban_barchart)
 informed_choice_scotland_by_chronic_pain <- `Chronic Pain` %>% 
   filter(
     `Question Number` == "q16m",
-    `Response Option` =="positive"
+    `Response Option` =="positive",
+    `By Question Response Option` != "Skipped Q42"
   ) %>%
-  group_by(`By Question Response Option`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_informed_choice = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
-
+  group_by(`By Question Response Option`)
 
 informed_choice_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
-  data = informed_choice_scotland_by_chronic_pain %>% 
-    mutate(`By Question Response Option` = factor(
-      `By Question Response Option`,
-      levels = c("Yes", "No", "Skipped Q42")
-    )),
-  x_var = `By Question Response Option`,
-  y_var = percentage_informed_choice,
+  data = informed_choice_scotland_by_chronic_pain,
+  x_var = Percentage,
+  y_var = `By Question Response Option`,
   title = str_wrap(
     "The percentage of respondents responding positively to, 'I felt able to  make an informed choice about my treatment and care' by Chronic pain",
     width = 60
   ), 
-  x_lab = "Do you suffer from chronic or persistent pain, that is pain that carries on for longer than 3 months despite medication or treatment?", 
-  y_lab = "Percentage (%)"
-)+
-  geom_hline(
-    yintercept = informed_choice_scotland,
-    linetype = "dashed",
-    colour = "red"
+  x_lab = "Percentage (%)",
+  y_lab = "Chronic pain?", 
+  bar_colour = "#D071A7"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = informed_choice_scotland,
-    label = paste0("Scottish average: ", round(informed_choice_scotland, 1), "%"),
-    hjust = 1,
-    vjust = -2,
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
+  )+
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100))
 
 
 informed_choice_scotland_by_chronic_pain_barchart
-save_plot_with_script_name(informed_choice_scotland_by_chronic_pain_barchart)
+save_plot_with_script_name(informed_choice_scotland_by_chronic_pain_barchart, width = 15.46, height = 3.77, show_title = FALSE)
 
 ##  Barchart by Long term condition ##
 informed_choice_scotland_by_long_term <- `Long-Term Condition` %>% 
@@ -580,53 +567,38 @@ save_plot_with_script_name(informed_choice_scotland_by_sexual_orientation_barcha
 informed_choice_scotland_by_ethnicity <- Ethnicity %>% 
   filter(
     `Question Number` == "q16m",
-    `Response Option` =="positive"
+    `Response Option` =="positive",
+    `By Question Response Option`!= "Skipped Q44"
   ) %>%
-  group_by(`By Question Response Option`) %>%
-  summarise(
-    `Question Number` = first(`Question Number`),
-    `Question Text` = first(`Question Text`),
-    `Response Option` = "positive",
-    percentage_informed_choice = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
-  )
+  group_by(`By Question Response Option`)
 
 informed_choice_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
-  data = informed_choice_scotland_by_ethnicity %>% 
-    mutate(
-      `By Question Response Option` = 
-        forcats::fct_reorder(`By Question Response Option`,
-                             percentage_informed_choice,
-                             .desc = TRUE) %>%
-        forcats::fct_relevel("Skipped Q44", after = Inf)
-    ),
-  x_var = `By Question Response Option`,
-  y_var = percentage_informed_choice,
+  data = informed_choice_scotland_by_ethnicity,
+  x_var = Percentage,
+  y_var = `By Question Response Option`,
   title = str_wrap(
     "The percentage of respondents responding positively to, 'I felt able to  make an informed choice about my treatment and care' by ethnicity",
     width = 60
   ), 
-  x_lab = "What is your ethnic group?", 
-  y_lab = "Percentage (%)"
+  y_lab = "Ethnic group", 
+  x_lab = "Percentage (%)", 
+  bar_colour = "#D071A7"
 )+
-  geom_hline(
-    yintercept = informed_choice_scotland,
-    linetype = "dashed",
-    colour = "red"
+  geom_errorbar(
+    aes(
+      xmin = `Lower 95% Confidence Interval`,
+      xmax = `Upper 95% Confidence Interval`
+    ),
+    width = 0.2,
+    linewidth = 0.5,
+    colour = "black"
   )+
-  annotate(
-    "text",
-    x = Inf,
-    y = informed_choice_scotland,
-    label = paste0("Scottish average: ", round(informed_choice_scotland, 1), "%"),
-    hjust = 1,
-    vjust = -2,
-    colour = "red"
-  ) +
-  coord_cartesian(clip = "off")
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_x_continuous(
+    limits = c(0,100))
 
 informed_choice_scotland_by_ethnicity_barchart
-save_plot_with_script_name(informed_choice_scotland_by_ethnicity_barchart)
+save_plot_with_script_name(informed_choice_scotland_by_ethnicity_barchart, width = 15.46, height = 3.77, show_title = FALSE)
 
 ###############################################################################
 ## Comparing to the last surveys results at Scotland level ##
