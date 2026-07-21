@@ -489,7 +489,7 @@ easy_contact_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
     width = 60
   ),   
   x_lab = "Percentage (%)",
-  y_lab = "", 
+  y_lab = "Long term condition?", 
   bar_colour = "#F46A25",
   bar_width = 0.75
   )+
@@ -504,13 +504,17 @@ easy_contact_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
   )+
   scale_y_discrete(expand = c(0, 0)) +
   scale_x_continuous(
-    limits = c(0,100),
-    expand = expansion(mult = c(0, 0.05))
-  )
+    limits = c(0,100)
+  )+
+  theme(
+    axis.title.y = element_text(
+      hjust = 0.9,
+      size = 11
+    ))
 
 
 easy_contact_scotland_by_long_term_barchart
-save_plot_with_script_name(easy_contact_scotland_by_long_term_barchart, width = 11,height = 5)
+save_plot_with_script_name(easy_contact_scotland_by_long_term_barchart, width = 15.81,height = 3.84, show_title = FALSE)
 
 ## Barchart  by Sexual Orientation ##
 easy_contact_scotland_by_sexual_orientation <- `Sexual Orientation` %>% 
