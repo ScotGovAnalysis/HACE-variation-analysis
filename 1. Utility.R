@@ -16,14 +16,25 @@ file_path_geographies_2025 <- "Setup documents - to be deleted once storage loca
 file_path_geographies_2023 <- "Setup documents - to be deleted once storage location decided/Health+and+Care+Experience+Survey+2023+to+2024+-tables+of+results+by+geography.xlsx"
 file_path_geographies_2021 <- "Setup documents - to be deleted once storage location decided/combined-pnn-info-questions-updated-25-10-22 (1).xlsx"
 
+# Read in lookup data set to determine what practices sit in each cluster in which hscp etc
 SG_Practice_lookup <- readRDS("~/HSCA/HACE-variation-analysis/Setup documents - to be deleted once storage location decided/SG_Practice_lookup.rds")
 
+# Vector of all responses considered as urgent access
 within_2_days_responses <- c(
   "I saw or spoke to a doctor or nurse on the same day",
   "I saw or spoke to a doctor or nurse within 1 or 2 working days"
 )
 
-# Function that will create folders for the plots and save them to the working directory
+# SG Core value colors for slide pack
+access_colour <- "#F46A25"
+quality_colour <- "#19AB19"
+person_centered_colour <- "#D071A7"
+
+
+
+# Function that will create folders for the plots using each individual script name 
+# and save them to the working directory. It then saves the plot using the title of
+# the plot as the name, and any specified width and height measurements in cm.  
 save_plot_with_script_name <- function(plot,
                                        width = 15,
                                        height = 8,
@@ -76,7 +87,7 @@ save_plot_with_script_name <- function(plot,
   print(geom_classes)
 }
 
-# Function for creating histograms
+# Functions for creating various chart types.
 make_histogram <- function(data, 
                            x_var, 
                            title,
