@@ -114,7 +114,7 @@ OOH_care_cluster_barchart <- make_barchart_multiple_groups(
   ),
   x_lab = "Percentage (%)",
   y_lab = "Number of GP clusters",
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
 )+
 geom_text(
 aes(
@@ -176,7 +176,7 @@ OOH_care_HSCP_barchart_2 <- make_barchart_multiple_groups(
   x_lab = "Percentage (%)",
   y_lab = ""
 )+
-  geom_col(fill = "#D071A7")+
+  geom_col(fill = person_centered_colour)+
   geom_errorbar(
     aes(
       xmin = `Lower 95% Confidence Interval`,
@@ -218,7 +218,7 @@ OOH_care_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "Sex",
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -260,7 +260,7 @@ OOH_care_scotland_by_age_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "Age Band",
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -275,7 +275,7 @@ OOH_care_scotland_by_age_barchart <- make_barchart_multiple_groups(
   scale_y_discrete(limits = rev)
 
 OOH_care_scotland_by_age_barchart
-save_plot_with_script_name(OOH_care_scotland_by_age_barchart, width = 15.77, height = 5.19, show_title = FALSE)
+save_plot_with_script_name(OOH_care_scotland_by_age_barchart, width = 15, height = 8.16, show_title = FALSE)
 
 # Barchart of Scotland average answer by SIMD #
 OOH_care_scotland_by_SIMD <- SIMD %>%
@@ -299,7 +299,7 @@ OOH_care_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
   ), 
   y_lab = "SIMD decile", 
   x_lab = "Percentage (%)",
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -337,7 +337,7 @@ OOH_care_scotland_by_urban_barchart <- make_barchart_multiple_groups(
   ), 
   y_lab = "Urban-Rural 8-fold classification", 
   x_lab = "Percentage (%)", 
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
 )+
   geom_errorbar(
     aes(
@@ -377,7 +377,7 @@ OOH_care_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "Chronic pain?",
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -393,7 +393,7 @@ OOH_care_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
     limits = c(0,100))
 
 OOH_care_scotland_by_chronic_pain_barchart
-save_plot_with_script_name(OOH_care_scotland_by_chronic_pain_barchart, width = 15.81,height = 3.84, show_title = FALSE)
+save_plot_with_script_name(OOH_care_scotland_by_chronic_pain_barchart, width = 15,height = 4, show_title = FALSE)
 
 ##  Barchart by Long term condition ##
 OOH_care_scotland_by_long_term <- `Long-Term Condition` %>% 
@@ -414,8 +414,8 @@ OOH_care_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
     width = 60
   ),
   x_lab = "Percentage (%)",
-  y_lab = "Long term condition?",
-  bar_colour = "#D071A7"
+  y_lab = "Long-term condition?",
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -435,7 +435,7 @@ OOH_care_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
         ))
 
 OOH_care_scotland_by_long_term_barchart
-save_plot_with_script_name(OOH_care_scotland_by_long_term_barchart,width = 15.81,height = 3.84, show_title = FALSE)
+save_plot_with_script_name(OOH_care_scotland_by_long_term_barchart,width = 15,height = 4, show_title = FALSE)
 
 ## Barchart  by Sexual Orientation ##
 OOH_care_scotland_by_sexual_orientation <- `Sexual Orientation` %>% 
@@ -456,7 +456,7 @@ OOH_care_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_group
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "Sexual Orientation",
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -493,7 +493,7 @@ OOH_care_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
   ),
   x_lab = "Percentage (%)",
   y_lab = "Ethnicity", 
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -509,7 +509,7 @@ OOH_care_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
     limits = c(0,100))
 
 OOH_care_scotland_by_ethnicity_barchart
-save_plot_with_script_name(OOH_care_scotland_by_ethnicity_barchart, width = 15.45,height = 3.08, show_title = FALSE)
+save_plot_with_script_name(OOH_care_scotland_by_ethnicity_barchart, width = 15.45,height = 4, show_title = FALSE)
 
 ###############################################################################
 ## Comparing to the last surveys results at Scotland level ##
@@ -614,11 +614,11 @@ OOH_care_scotland_timeseries_scatter <- make_scatter(
   x_lab = "Year"
   )+
   geom_line(
-    colour = "#D071A7",
+    colour = person_centered_colour,
     aes(group = 2), 
     linewidth = 2, 
   ) +
-  geom_point(size = 4, colour = "#D071A7")+
+  geom_point(size = 4, colour = person_centered_colour)+
   geom_text(
     aes(
       label = paste0(round(Percentage, 0), "%")),
