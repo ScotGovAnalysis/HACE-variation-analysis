@@ -35,45 +35,26 @@ easy_contact_scotland <- Scotland %>%
 easy_contact_GP <- `GP Practice` %>%
   filter(
     `Question Number` == "q03",
-    `Response Option` =="positive") %>%
-  group_by(`GP Practice name`) %>%
-  summarise(
-    percentage_easy_contact_GP = sum(Percentage, na.rm = TRUE), 
-    .groups = "drop"
-  ) %>%
-  arrange(percentage_easy_contact_GP) %>%
-  mutate(order = row_number())
+    `Response Option` =="positive")
 
 # For GP Clusters
 easy_contact_cluster <- `GP Cluster` %>%
   filter(
     `Question Number` == "q03",
-    `Response Option` =="positive") %>%
-  group_by(`Area`) %>%
-  summarise(percentage_easy_contact_cluster = sum(Percentage, na.rm = TRUE), 
-            .groups = "drop") %>%
-  arrange(percentage_easy_contact_cluster) %>%
-  mutate(order = row_number())
+    `Response Option` =="positive") 
 
 # For Health and Social Care partnerships
 easy_contact_HSCP <- HSCP %>%
   filter(
     `Question Number` == "q03",
-    `Response Option` =="positive") %>%
-  group_by(`Area`) %>% 
-  arrange(Percentage) %>%
-  mutate(order = row_number())
+    `Response Option` =="positive")
 
 # For Health Board
 easy_contact_HB <- `Health Board` %>%
   filter(
     `Question Number` == "q03",
-    `Response Option` =="positive") %>%
-  group_by(`Area`) %>%
-  summarise(percentage_easy_contact_HB = sum(Percentage, na.rm = TRUE), 
-            .groups = "drop") %>%
-  arrange(percentage_easy_contact_HB) %>%
-  mutate(order = row_number())
+    `Response Option` =="positive") 
+
 ################################################################################
 ## Barchart of urgent access national level ------------------------------------
 bands <- paste0(seq(0, 90, 10), "-", seq(10, 100, 10))
@@ -87,9 +68,10 @@ scotland_band <- cut(
 )
 
 easy_contact_GP_binned <- easy_contact_GP %>%
+  ungroup() %>%
   mutate(
     pct_band = cut(
-      percentage_easy_contact_GP,
+      Percentage,
       breaks = seq(0, 100, by = 10),
       labels = bands,
       include.lowest = TRUE,
@@ -97,26 +79,17 @@ easy_contact_GP_binned <- easy_contact_GP %>%
     )
   ) %>%
   count(pct_band, name = "n_practices") %>%
-  complete(pct_band = bands, 
-           fill = list(n_practices = 0)) %>%
+  complete(pct_band = bands, fill = list(n_practices = 0)) %>%
   mutate(pct_band = factor(pct_band, levels = bands))
-
-scotland_y <- easy_contact_GP_binned %>%
-  filter(pct_band == scotland_band) %>%
-  pull(n_practices)
-
 
 easy_contact_GP_barchart <- make_barchart_multiple_groups(
   data = easy_contact_GP_binned,
   x_var = pct_band,
   y_var = n_practices,
-  title = str_wrap(
-    "The percentage of respondents who rated the ease of their General Practice as positive by GP practice",
-    width = 60
-  ),
+  title = "The number of GP practices scoring in each percentage band of positive ratings for ease of contact",
   x_lab = "Percentage (%)",
   y_lab = "Number of GP practices",
-  bar_colour = "#F46A25"
+  bar_colour = access_colour
   )+
   geom_text(
     aes(
@@ -132,109 +105,8 @@ easy_contact_GP_barchart <- make_barchart_multiple_groups(
                "TRUE" = "black")
   )
 easy_contact_GP_barchart
-save_plot_with_script_name(easy_contact_GP_barchart)
+#save_plot_with_script_name(easy_contact_GP_barchart)
 
-# # By Cluster
-# easy_contact_cluster_binned <- easy_contact_cluster %>%
-#   mutate(
-#     pct_band = cut(
-#       percentage_easy_contact_cluster,
-#       breaks = seq(0, 100, by = 10),
-#       labels = bands,
-#       include.lowest = TRUE,
-#       right = FALSE
-#     )
-#   ) %>%
-#   count(pct_band, name = "n_practices") %>%
-#   complete(pct_band = bands, fill = list(n_practices = 0)) %>%
-#   mutate(pct_band = factor(pct_band, levels = bands))
-# 
-# scotland_y <- easy_contact_cluster_binned %>%
-#   filter(pct_band == scotland_band) %>%
-#   pull(n_practices)
-# 
-# 
-# easy_contact_cluster_barchart <- make_barchart_multiple_groups(
-#   data = easy_contact_cluster_binned,
-#   x_var = pct_band,
-#   y_var = n_practices,
-#   title = str_wrap(
-#     "The percentage of respondents who rated the ease of their General Practice as positive by GP cluster",
-#     width = 60
-#   ),
-#   x_lab = "Percentage (%)",
-#   y_lab = "Number of GP clusters")+
-#   geom_point(
-#     data = data.frame(
-#       pct_band = scotland_band,
-#       n_practices = 1
-#     ),
-#     aes(x = pct_band, y = scotland_y),
-#     colour = "red",
-#     size = 4
-#   )+
-#   annotate(
-#     "text",
-#     x = scotland_band,
-#     y = scotland_y,
-#     label = paste0("Scottish average ", round(easy_contact_scotland, 0), "%"),
-#     vjust = -0.8,
-#     colour = "red",
-#     fontface = "bold"
-#   )
-# easy_contact_cluster_barchart
-# save_plot_with_script_name(easy_contact_cluster_barchart)
-
-# # By HSCP
-# easy_contact_HSCP_binned <- easy_contact_HSCP %>%
-#   mutate(
-#     pct_band = cut(
-#       percentage_easy_contact_HSCP,
-#       breaks = seq(0, 100, by = 10),
-#       labels = bands,
-#       include.lowest = TRUE,
-#       right = FALSE
-#     )
-#   ) %>%
-#   count(pct_band, name = "n_practices") %>%
-#   complete(pct_band = bands, fill = list(n_practices = 0)) %>%
-#   mutate(pct_band = factor(pct_band, levels = bands))
-# 
-# scotland_y <- easy_contact_HSCP_binned %>%
-#   filter(pct_band == scotland_band) %>%
-#   pull(n_practices)
-# 
-# 
-# easy_contact_HSCP_barchart <- make_barchart_multiple_groups(
-#   data = easy_contact_HSCP_binned,
-#   x_var = pct_band,
-#   y_var = n_practices,
-#   title = str_wrap(
-#     "The percentage of respondents who rated the ease of their General Practice as positive by HSCP",
-#     width = 60
-#   ),
-#   x_lab = "Percentage (%)",
-#   y_lab = "Number of HSCPs")+
-#   geom_point(
-#     data = data.frame(
-#       pct_band = scotland_band,
-#       n_practices = 1
-#     ),
-#     aes(x = pct_band, y = scotland_y),
-#     colour = "red",
-#     size = 4
-#   )+
-#   annotate(
-#     "text",
-#     x = scotland_band,
-#     y = scotland_y,
-#     label = paste0("Scottish average ", round(easy_contact_scotland, 0), "%"),
-#     vjust = -0.8,
-#     colour = "red",
-#     fontface = "bold"
-#   )
-# easy_contact_HSCP_barchart
-# save_plot_with_script_name(easy_contact_HSCP_barchart)
 
 ################################################################################
 ################################################################################
@@ -244,11 +116,11 @@ HSCP_barchart <- make_barchart_multiple_groups(
   data = easy_contact_HSCP ,
   x_var = Percentage,
   y_var = reorder(Area, Percentage),
-  title = "Percentage by HSCP",
+  title = "Percentage of positive ratings for ease of contact, by HSCP",
   x_lab = "Percentage (%)",
   y_lab = ""
-)+
-  geom_col(fill = "#F46A25")+
+  )+
+  geom_col(fill = access_colour)+
   geom_errorbar(
     aes(
       xmin = `Lower 95% Confidence Interval`,
@@ -264,10 +136,7 @@ HSCP_barchart <- make_barchart_multiple_groups(
     expand = expansion(mult = c(0, 0.05))
   )
 HSCP_barchart
-save_plot_with_script_name(HSCP_barchart,
-                           width = 15.68,
-                           height = 11.85)
-
+#save_plot_with_script_name(HSCP_barchart, height = 12)
 
 ################################################################################
 ##-----------------------------------------------------------------------------#
@@ -284,13 +153,10 @@ easy_contact_scotland_by_sex_barchart <- make_barchart_multiple_groups(
     filter(Sex != "Scotland Total"),
   x_var = Percentage,
   y_var = reorder(Sex,Percentage),
-  title = str_wrap(
-    "The percentage of respondents who rated the ease of their General Practice as positive by sex",
-    width = 60
-  ), 
+  title = "Percentage of positive ratings for ease of contact, by sex",
   x_lab = "Percentage (%)",
   y_lab = "Sex", 
-  bar_colour = "#F46A25"
+  bar_colour = access_colour
   )+
   geom_errorbar(
     aes(
@@ -312,7 +178,7 @@ easy_contact_scotland_by_sex_barchart <- make_barchart_multiple_groups(
     labels = stringr::str_to_title
   )
 easy_contact_scotland_by_sex_barchart
-save_plot_with_script_name(easy_contact_scotland_by_sex_barchart)
+#save_plot_with_script_name(easy_contact_scotland_by_sex_barchart)
 
 ## Barchart of Scotland average answer by Age band #
 easy_contact_scotland_by_age <- `Age Band` %>%
@@ -326,13 +192,10 @@ easy_contact_scotland_by_age_barchart <- make_barchart_multiple_groups(
   data = easy_contact_scotland_by_age,
   x_var = Percentage,
   y_var = `Age Band`,
-  title = str_wrap(
-    "The percentage of respondents who rated the ease of their General Practice as positive by age",
-    width = 60
-  ), 
+  title = "Percentage of positive ratings for ease of contact, by age",
   x_lab = "Percentage (%)", 
   y_lab = "Age Band",
-  bar_colour = "#F46A25"
+  bar_colour = access_colour
   )+
   geom_errorbar(
     aes(
@@ -348,14 +211,14 @@ easy_contact_scotland_by_age_barchart <- make_barchart_multiple_groups(
 
   
 easy_contact_scotland_by_age_barchart
-save_plot_with_script_name(easy_contact_scotland_by_age_barchart)
+#save_plot_with_script_name(easy_contact_scotland_by_age_barchart)
+
 
 # Barchart of Scotland average answer by SIMD #
 easy_contact_scotland_by_SIMD <- SIMD %>%
   filter(
     `Question Number` == "q03",
     `Response Option` =="positive",
-    
   ) %>%
   group_by(`Scottish Index of Multiple Deprivation Decile`)
 
@@ -367,13 +230,10 @@ easy_contact_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
     11-as.numeric(sub("^([0-9]+).*", "\\1",
                    `Scottish Index of Multiple Deprivation Decile`))
   ),
-  title = str_wrap(
-    "The percentage of respondents who rated the ease of their General Practice as positive by SIMD",
-    width = 60
-  ), 
+  title = "Percentage of positive ratings for ease of contact, by SIMD",
   x_lab = "Percentage (%)", 
   y_lab = "SIMD decile",
-  bar_colour = "#F46A25"
+  bar_colour = access_colour
   )+
   geom_errorbar(
     aes(
@@ -387,7 +247,8 @@ easy_contact_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
   scale_x_continuous(limits = c(0,100))
 
 easy_contact_scotland_by_SIMD_barchart
-save_plot_with_script_name(easy_contact_scotland_by_SIMD_barchart)
+#save_plot_with_script_name(easy_contact_scotland_by_SIMD_barchart)
+
 
 # Barchart of Scotland average answer by Urban 8 #
 easy_contact_scotland_by_urban <- `Urban-Rural 8` %>%
@@ -404,13 +265,10 @@ easy_contact_scotland_by_urban_barchart <- make_barchart_multiple_groups(
     `Urban-Rural 8-fold classification`,
     levels = rev(sort(unique(`Urban-Rural 8-fold classification`)))
   ),
-  title = str_wrap(
-    "The percentage of respondents who rated the ease of their General Practice as positive by Urban-Rural 8",
-    width = 60
-  ), 
+  title = "Percentage of positive ratings for ease of contact, by Urban-Rural 8",
   x_lab = "Percentage (%)", 
   y_lab = "",
-  bar_colour = "#F46A25"
+  bar_colour = access_colour
   )+
   geom_errorbar(
     aes(
@@ -427,7 +285,8 @@ easy_contact_scotland_by_urban_barchart <- make_barchart_multiple_groups(
     expand = expansion(mult = c(0, 0.05))
   )
 easy_contact_scotland_by_urban_barchart
-save_plot_with_script_name(easy_contact_scotland_by_urban_barchart)
+#save_plot_with_script_name(easy_contact_scotland_by_urban_barchart)
+
 
 ##----------------------------------------------------------------------------#
 ##Barchart by Chronic Pain ##
@@ -443,13 +302,10 @@ easy_contact_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
   data = easy_contact_scotland_by_chronic_pain, 
   x_var = Percentage,
   y_var = `By Question Response Option`,
-  title = str_wrap(
-    "The percentage of respondents who rated the ease of their General Practice as positive by Chronic pain",
-    width = 60
-  ), 
+  title = "Percentage of positive ratings for ease of contact, by Chronic pain",
   x_lab = "Percentage (%)",
   y_lab = "Experienced chronic pain?", 
-  bar_colour = "#F46A25"
+  bar_colour = access_colour
   )+
   geom_errorbar(
     aes(
@@ -466,9 +322,9 @@ easy_contact_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
     expand = expansion(mult = c(0, 0.05))
   )
 
-
 easy_contact_scotland_by_chronic_pain_barchart
-save_plot_with_script_name(easy_contact_scotland_by_chronic_pain_barchart)
+#save_plot_with_script_name(easy_contact_scotland_by_chronic_pain_barchart)
+
 
 ##  Barchart by Long term condition ##
 easy_contact_scotland_by_long_term <- `Long-Term Condition` %>% 
@@ -484,13 +340,10 @@ easy_contact_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
   data = easy_contact_scotland_by_long_term,
   x_var = Percentage,
   y_var = `By Question Response Option`,
-  title = str_wrap(
-    "The percentage of respondents who rated the ease of their General Practice as positive by long term condition",
-    width = 60
-  ),   
+  title = "Percentage of positive ratings for ease of contact, by long term condition",
   x_lab = "Percentage (%)",
   y_lab = "Long term condition?", 
-  bar_colour = "#F46A25",
+  bar_colour = access_colour,
   bar_width = 0.75
   )+
   geom_errorbar(
@@ -512,9 +365,8 @@ easy_contact_scotland_by_long_term_barchart <- make_barchart_multiple_groups(
       size = 11
     ))
 
-
 easy_contact_scotland_by_long_term_barchart
-save_plot_with_script_name(easy_contact_scotland_by_long_term_barchart, width = 15.81,height = 3.84, show_title = FALSE)
+#save_plot_with_script_name(easy_contact_scotland_by_long_term_barchart)
 
 ## Barchart  by Sexual Orientation ##
 easy_contact_scotland_by_sexual_orientation <- `Sexual Orientation` %>% 
@@ -529,13 +381,10 @@ easy_contact_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_g
   data = easy_contact_scotland_by_sexual_orientation,
   x_var = Percentage,
   y_var = reorder(`By Question Response Option`, Percentage),
-  title = str_wrap(
-    "The percentage of respondents who rated the ease of their General Practice as positive by sexual orientation",
-    width = 60
-  ), 
+  title = "Percentage of positive ratings for ease of contact, by sexual orientation",
   x_lab = "Percentage (%)", 
   y_lab = "Sexual Orientation",
-  bar_colour = "#F46A25"
+  bar_colour = access_colour
   )+
   geom_errorbar(
     aes(
@@ -553,7 +402,7 @@ easy_contact_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_g
   )
 
 easy_contact_scotland_by_sexual_orientation_barchart
-save_plot_with_script_name(easy_contact_scotland_by_sexual_orientation_barchart)
+#save_plot_with_script_name(easy_contact_scotland_by_sexual_orientation_barchart)
 
 ## # Barchart by Ethnicity ##
 easy_contact_scotland_by_ethnicity <- Ethnicity %>% 
@@ -568,13 +417,10 @@ easy_contact_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
   data = easy_contact_scotland_by_ethnicity,
   x_var = Percentage,
   y_var = `By Question Response Option`,
-  title = str_wrap(
-    "The percentage of respondents who rated the ease of their General Practice as positive by ethnicity",
-    width = 60
-  ), 
+  title = "Percentage of positive ratings for ease of contact, by ethnicity",
   x_lab = "What is your ethnic group?", 
   y_lab = "Percentage (%)",
-  bar_colour = "#F46A25"
+  bar_colour = access_colour
   )+
   geom_errorbar(
     aes(
@@ -592,7 +438,7 @@ easy_contact_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
   )
 
 easy_contact_scotland_by_ethnicity_barchart
-save_plot_with_script_name(easy_contact_scotland_by_ethnicity_barchart)
+#save_plot_with_script_name(easy_contact_scotland_by_ethnicity_barchart)
 
 ###############################################################################
 ## Comparing to the last surveys results at Scotland level ##
@@ -614,7 +460,7 @@ easy_contact_scotland_2022 <- `Scotland - PNN Questions` %>%
     Percentage = as.numeric(as.character(Percentage))
   )
 
-## Cleaning 2023 results
+## Cleaning 2024 results
 easy_contact_scotland_2024 <- `Positive, Neutral or Negative` %>% 
   filter(
     `Geography Type` == "Scotland",
@@ -664,43 +510,20 @@ easy_contact_scotland_timeseries <- bind_rows(
   )) %>%
   mutate(`Response Option` = as.factor(`Response Option`))
 
-
-
 glimpse(easy_contact_scotland_timeseries)
-
-easy_contact_scotland_timeseries_barchart <- make_barchart_multiple_groups(
-  data = easy_contact_scotland_timeseries,
-  x_var = Year,
-  y_var = Percentage,
-  title = "Timeseries of percentage of respondents positive about the ease of contacting their GP",
-  y_lab = "Percentage (%)",
-  x_lab = "Year"
-  )+
-  scale_y_continuous(
-    limits = c(0, 100),
-    breaks = seq(0, 100, 10)
-  )+
-  geom_text(
-    aes(label = paste0(round(Percentage, 0), "%")),
-    vjust = 2,
-    size = 3,
-    colour = "white"
-  )
-easy_contact_scotland_timeseries_barchart
-save_plot_with_script_name(easy_contact_scotland_timeseries_barchart)
 
 easy_contact_scotland_timeseries_scatter <- make_scatter(
   data = easy_contact_scotland_timeseries,
   x_var = Year,
   y_var = Percentage,
-  title = "Timeseries of percentage of respondents positive about the ease of contacting their GP",
+  title = "Timeseries of the percentage of positive ratings for ease of contacting GP",
   y_lab = "Percentage (%)",
   x_lab = "Year"
   )+
-  geom_line(colour = "#F46A25",
+  geom_line(colour = access_colour,
             aes(group = 2), 
             linewidth = 2, ) +
-  geom_point(size = 4, colour = "#F46A25")+
+  geom_point(size = 4, colour = access_colour)+
   geom_text(
     aes(
       label = paste0(round(Percentage, 0), "%")),
@@ -709,149 +532,139 @@ easy_contact_scotland_timeseries_scatter <- make_scatter(
   )+
   scale_y_continuous(limits = c(0,100))
 easy_contact_scotland_timeseries_scatter
-save_plot_with_script_name(easy_contact_scotland_timeseries_scatter)
+#save_plot_with_script_name(easy_contact_scotland_timeseries_scatter)
 
 #------------------------## Ease of contacting GP variation analysis ##--------------------------#
 easy_contact_variation_by_GP <- variation_data_2025 %>%
   filter(
     `Question Number` == "q03",
     `Response Option` =="positive"
-  ) %>%
-  group_by(hscp_name, `GP Practice name`) %>%
-  summarise(
-    easy_contact_percentage = sum(Percentage, na.rm = TRUE),
-    .groups = "drop"
   )
 
 easy_contact_variation_by_hscp <- easy_contact_variation_by_GP %>%
   group_by(hscp_name) %>%
   summarise(
     num_practices = n(),
-    sd_pct = sd(easy_contact_percentage, na.rm = TRUE),
-    min_pct = min(easy_contact_percentage, na.rm = TRUE),
-    max_pct = max(easy_contact_percentage, na.rm = TRUE),
+    num_clusters = n_distinct(hscp_gpcl_name),
+    sd_pct = sd(Percentage, na.rm = TRUE),
+    min_pct = min(Percentage, na.rm = TRUE),
+    max_pct = max(Percentage, na.rm = TRUE),
     range_pct = max_pct - min_pct,
     .groups = "drop"
   ) %>%
   arrange(desc(sd_pct))
 
-
-easy_contact_variation_tails <- bind_rows(
-  Top5 = easy_contact_variation_by_hscp %>%
-    filter(num_practices > 15) %>%
-    slice_head(n = 2),
-  Bottom5 = easy_contact_variation_by_hscp %>%
-    filter(num_practices > 15) %>%
-    slice_tail(n = 2),
-  ) %>%
+easy_contact_largest_hscp_by_clusters <- easy_contact_variation_by_hscp %>%
+  arrange(desc(num_clusters), desc(num_practices)) %>%
+  slice_head(n = 5)
+## This will extract the chosen HSCP based on highest number of clusters and individual practices
+easy_contact_chosen_hscp <- easy_contact_largest_hscp_by_clusters %>% 
+  slice_head(n = 1) %>% 
   pull(hscp_name)
 
+# Get summary stats for the chosen HSCP
+easy_contact_variation_by_cluster <- easy_contact_variation_by_GP %>%
+  filter(hscp_name == easy_contact_chosen_hscp) %>% 
+  group_by(hscp_gpcl_name) %>% 
+  summarise(
+    num_practices = n(),
+    sd_pct = sd(Percentage, na.rm = TRUE),
+    min_pct = min(Percentage, na.rm = TRUE),
+    max_pct = max(Percentage, na.rm = TRUE),
+    range_pct = max_pct - min_pct,
+    .groups = "drop"
+  ) %>%
+  arrange(desc(sd_pct))
 
-easy_contact_variation_tails_boxplot<- ggplot(
-  easy_contact_variation_by_GP %>%
-    filter(hscp_name %in% easy_contact_variation_tails),
-  aes(x = reorder(hscp_name, easy_contact_percentage),
-      y = easy_contact_percentage)
-) +
-  geom_boxplot(outlier.shape = NA, fill = "lightgrey") +
-  coord_flip() +
-  labs(
-    title = "Ease of contacting GP: Top 2 and Bottom 2 HSCPs by variation",
-    x = "HSCP",
-    y = "% positive"
-  ) +
-  theme_minimal()
-easy_contact_variation_tails_boxplot
-save_plot_with_script_name(easy_contact_variation_tails_boxplot)
+# What clusters in the HSCP have the largest SD
+top_sd <- easy_contact_variation_by_cluster %>%
+  arrange(desc(sd_pct)) %>%
+  slice_head(n = 4)
+# What clusters in the HSCP have the largest range
+top_range <- easy_contact_variation_by_cluster %>%
+  filter(!hscp_gpcl_name %in% top_sd$hscp_gpcl_name) %>%
+  arrange(desc(range_pct)) %>%
+  slice_head(n = 2)
 
-chosen_easy_contact_variation_by_hscp <- easy_contact_variation_by_GP %>%
+easy_contact_cluster_variation_tails <- bind_rows(
+  sd5 = top_sd,
+  range5 = top_range,
+  .id = "Group"
+  ) %>%
+  pull(hscp_gpcl_name)
+easy_contact_cluster_variation_tails
+
+#Plot a combinition of the most varied clusters 
+easy_contact_plot_data <- easy_contact_variation_by_GP %>%
+  ungroup() %>% 
   filter(
-    hscp_name %in% easy_contact_variation_tails
+    hscp_name == easy_contact_chosen_hscp,
+    hscp_gpcl_name %in% easy_contact_cluster_variation_tails
+  ) %>%
+  mutate(
+    cluster_label = paste(
+      "GP Cluster",
+      as.integer(factor(hscp_gpcl_name))
+    )
   )
 
-chosen_easy_contact_variation_by_hscp_plot <- ggplot(
-  data = chosen_easy_contact_variation_by_hscp, 
-  aes(x = reorder(hscp_name, easy_contact_percentage), 
-      y = easy_contact_percentage)
-  ) +
-  geom_jitter(
-    aes(colour = hscp_name, shape = hscp_name),
-    width = 0.4, height = 0,
-    size = 3, alpha = 0.75
-  ) +
-  geom_hline(
-    yintercept = easy_contact_scotland,
-    linetype = "solid",
-    colour = "black"
-  ) +
-  annotate(
-    "text",
-    x = 3.9,
-    y = easy_contact_scotland,
-    label = paste0("Scotland average ", round(easy_contact_scotland,0),"%"),
-    hjust = 0,
-    vjust = 1.5,
-    colour = "black",
-    size = 4
-  )+
-  scale_y_continuous(limits = c(0,100))+
-  labs(
-    title = "% positive about the ease of contacting their GP by GP Practice, grouped by HSCP",
-    x = "HSCP",
-    y = "% positive"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    legend.position = "none"
+easy_contact_variation_by_GP_Cluster_and_HSCP_plot <- ggplot(
+  easy_contact_variation_by_GP %>%
+    filter(
+      hscp_name == easy_contact_chosen_hscp,
+      hscp_gpcl_name %in% easy_contact_cluster_variation_tails
+    ) %>%
+    mutate(
+      cluster_label = paste(
+        "GP Cluster",
+        as.integer(factor(hscp_gpcl_name))
+      )
+    ),
+  aes(
+    x = cluster_label,
+    y = Percentage,
+    colour = cluster_label,
+    shape = cluster_label
   )
-
-chosen_easy_contact_variation_by_hscp_plot
-save_plot_with_script_name(chosen_easy_contact_variation_by_hscp_plot)
-
-#Violin plot
-chosen_easy_contact_variation_by_hscp_violin <- ggplot(
-  chosen_easy_contact_variation_by_hscp,
-  aes(x = reorder(hscp_name, easy_contact_percentage), y = easy_contact_percentage)
-  )+
-  geom_violin(
-    fill = "grey80",
-    alpha = 0.6,
-  )+
-  geom_hline(
-    yintercept = easy_contact_scotland,
-    colour = "black"
-  )+
-  annotate(
-    "text",
-    x = 3.9,
-    y = easy_contact_scotland,
-    label = paste0("Scotland average ", round(easy_contact_scotland,0),"%"),
-    hjust = 0,
-    vjust = 1.5,
-    colour = "black",
-    size = 4
-  )+
+) +
   geom_jitter(
-    aes(colour = hscp_name, shape = hscp_name),
-    width = 0.15,
-    size = 2,
-    alpha = 0.7,
+    width = 0.25,
+    height = 0,
+    size = 3
   ) +
   scale_y_continuous(limits = c(0, 100)) +
-  labs(
-    title = "Percentage of respondents positive about the ease of contacting their GP,by GP Practice (grouped by HSCP)",
-    x = "HSCP (anonymised)",
-    y = "% positive"
+  scale_shape_manual(
+    values = c(16, 17, 15, 18, 3, 4, 8, 7, 9, 10)
   ) +
-  theme_minimal() +
+  labs(
+    title = "Variation of the positive ease of contact ratings for individual GP Practices within a HSCP, grouped by GP Clusters",
+    x = "",
+    y = "Percentage of respondents rating their ease of contact positively (%)",
+    caption = paste(
+      "Note: Each point represents an individual GP practice.",
+      "Different colours and shapes are used to distinguish GP clusters.",
+      "All GP clusters included in this chart belong to the same HSCP."
+    )
+  ) +
+  theme_minimal(base_size = 12) +
   theme(
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    legend.position = "none"
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "none",
+    plot.caption = element_text(hjust = 0, size = 12)
   )
-chosen_easy_contact_variation_by_hscp_violin
-save_plot_with_script_name(chosen_easy_contact_variation_by_hscp_violin)
+easy_contact_variation_by_GP_Cluster_and_HSCP_plot
+#save_plot_with_script_name(plot, width = 29, height =15 ,show_title = TRUE)
 
-
+#Save plots
+save_plot_with_script_name(easy_contact_GP_barchart)
+save_plot_with_script_name(HSCP_barchart, height = 12)
+save_plot_with_script_name(easy_contact_scotland_by_sex_barchart)
+save_plot_with_script_name(easy_contact_scotland_by_age_barchart)
+save_plot_with_script_name(easy_contact_scotland_by_SIMD_barchart)
+save_plot_with_script_name(easy_contact_scotland_by_urban_barchart)
+save_plot_with_script_name(easy_contact_scotland_by_chronic_pain_barchart)
+save_plot_with_script_name(easy_contact_scotland_by_long_term_barchart)
+save_plot_with_script_name(easy_contact_scotland_by_sexual_orientation_barchart)
+save_plot_with_script_name(easy_contact_scotland_by_ethnicity_barchart)
+save_plot_with_script_name(easy_contact_scotland_timeseries_scatter)
+save_plot_with_script_name(easy_contact_variation_by_GP_Cluster_and_HSCP_plot, width = 29, height =15 ,show_title = TRUE)
