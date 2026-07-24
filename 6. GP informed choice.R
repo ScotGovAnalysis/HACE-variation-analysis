@@ -116,7 +116,7 @@ informed_choice_GP_barchart <- make_barchart_multiple_groups(
   ),
   x_lab = "Percentage (%)",
   y_lab = "Number of GP practices")+
-  geom_col(fill = "#D071A7")+
+  geom_col(fill = person_centered_colour)+
   geom_text(
     aes(
       label = round(n_practices, 0),
@@ -245,7 +245,7 @@ HSCP_barchart <- make_barchart_multiple_groups(
   x_lab = "Percentage (%)",
   y_lab = ""
 )+
-  geom_col(fill = "#D071A7")+
+  geom_col(fill = person_centered_colour)+
   geom_errorbar(
     aes(
       xmin = `Lower 95% Confidence Interval`,
@@ -290,7 +290,7 @@ informed_choice_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Sex", 
   y_lab = "Percentage (%)",
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
     geom_errorbar(
       aes(
@@ -333,7 +333,7 @@ informed_choice_scotland_by_age_barchart <- make_barchart_multiple_groups(
   x_lab = "Percentage (%)",
   y_lab = "Age Band",
   bar_width = 0.75,
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -348,7 +348,7 @@ informed_choice_scotland_by_age_barchart <- make_barchart_multiple_groups(
   scale_y_discrete(limits = rev)
   
 informed_choice_scotland_by_age_barchart
-save_plot_with_script_name(informed_choice_scotland_by_age_barchart)
+save_plot_with_script_name(informed_choice_scotland_by_age_barchart,width = 15, height = 8.16,show_title = FALSE)
 
 # Barchart of Scotland average answer by SIMD #
 informed_choice_scotland_by_SIMD <- SIMD %>%
@@ -372,7 +372,7 @@ informed_choice_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "SIMD decile",
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -408,7 +408,7 @@ informed_choice_scotland_by_urban_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)",
   y_lab = "", 
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -447,7 +447,7 @@ informed_choice_scotland_by_chronic_pain_barchart <- make_barchart_multiple_grou
   ), 
   x_lab = "Percentage (%)",
   y_lab = "Chronic pain?", 
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -462,9 +462,8 @@ informed_choice_scotland_by_chronic_pain_barchart <- make_barchart_multiple_grou
   scale_x_continuous(
     limits = c(0,100))
 
-
 informed_choice_scotland_by_chronic_pain_barchart
-save_plot_with_script_name(informed_choice_scotland_by_chronic_pain_barchart, width = 15.46, height = 3.77, show_title = FALSE)
+save_plot_with_script_name(informed_choice_scotland_by_chronic_pain_barchart, width = 15, height = 5.25, show_title = FALSE)
 
 ##  Barchart by Long term condition ##
 informed_choice_scotland_by_long_term <- `Long-Term Condition` %>% 
@@ -543,7 +542,7 @@ informed_choice_scotland_by_sexual_orientation_barchart <- make_barchart_multipl
   ), 
   x_lab = "Percentage (%)", 
   y_lab = "Sexual orientation",
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
   )+
   geom_errorbar(
     aes(
@@ -582,7 +581,7 @@ informed_choice_scotland_by_ethnicity_barchart <- make_barchart_multiple_groups(
   ), 
   y_lab = "Ethnic group", 
   x_lab = "Percentage (%)", 
-  bar_colour = "#D071A7"
+  bar_colour = person_centered_colour
 )+
   geom_errorbar(
     aes(
@@ -676,7 +675,7 @@ informed_choice_scotland_timeseries_barchart <- make_barchart_multiple_groups(
     breaks = seq(0, 100, 10)
   )+
   geom_col(
-    fill = "#D071A7"
+    fill = person_centered_colour
   )+
   geom_text(
     aes(label = paste0(round(Percentage, 0), "%")),
@@ -696,11 +695,11 @@ informed_choice_scotland_timeseries_scatter <- make_scatter(
   x_lab = "Year"
   )+
   geom_line(
-    colour = "#D071A7",
+    colour = person_centered_colour,
     aes(group = 2), 
     linewidth = 2, 
     ) +
-  geom_point(size = 4, colour = "#D071A7")+
+  geom_point(size = 4, colour = person_centered_colour)+
   geom_text(
     aes(
       label = paste0(round(Percentage, 0), "%")),
