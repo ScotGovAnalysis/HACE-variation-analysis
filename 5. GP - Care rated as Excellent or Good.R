@@ -119,7 +119,7 @@ overall_care_GP_barchart <- make_barchart_multiple_groups(
       ),
   x_lab = "Percentage (%)",
   y_lab = "Number of GP practices")+
-  geom_col(fill = "#19AB19")+
+  geom_col(fill = quality_colour)+
   geom_text(
     aes(
       label = round(n_practices, 0),
@@ -249,7 +249,7 @@ HSCP_barchart <- make_barchart_multiple_groups(
   x_lab = "Percentage (%)",
   y_lab = ""
   )+
-  geom_col(fill = "#19AB19")+
+  geom_col(fill = quality_colour)+
   geom_errorbar(
     aes(
       xmin = `Lower 95% Confidence Interval`,
@@ -292,7 +292,7 @@ overall_care_scotland_by_sex_barchart <- make_barchart_multiple_groups(
   x_lab = "Percentage (%)",
   y_lab = "Sex" 
   )+
-  geom_col(fill = "#19AB19" )+
+  geom_col(fill = quality_colour )+
   geom_errorbar(
     aes(
       xmin = `Lower 95% Confidence Interval`,
@@ -323,15 +323,6 @@ overall_care_scotland_by_age <- `Age Band` %>%
   ) %>%
   group_by(`Age Band`) 
 
-# %>%
-#   summarise(
-#     `Question Number` = first(`Question Number`),
-#     `Question Text` = first(`Question Text`),
-#     `Response Option` = "positive",
-#     percentage_overall_care = sum(Percentage, na.rm = TRUE),
-#     .groups = "drop"
-#   )
-
 overall_care_scotland_by_age_barchart <- make_barchart_multiple_groups(
   data = overall_care_scotland_by_age, 
   x_var = Percentage,
@@ -343,7 +334,7 @@ overall_care_scotland_by_age_barchart <- make_barchart_multiple_groups(
   x_lab = "Percentage (%)",
   y_lab = "Age band", 
   bar_width = 0.75,
-  bar_colour = "19AB19"
+  bar_colour = quality_colour
   )+
   geom_errorbar(
     aes(
@@ -358,7 +349,7 @@ overall_care_scotland_by_age_barchart <- make_barchart_multiple_groups(
   scale_y_discrete(limits = rev)
 
 overall_care_scotland_by_age_barchart
-save_plot_with_script_name(overall_care_scotland_by_age_barchart)
+save_plot_with_script_name(overall_care_scotland_by_age_barchart, width = 15,height = 8.16,show_title = FALSE)
 
 # Barchart of Scotland average answer by SIMD #
 overall_care_scotland_by_SIMD <- SIMD %>%
@@ -383,7 +374,7 @@ overall_care_scotland_by_SIMD_barchart <- make_barchart_multiple_groups(
   ), 
   x_lab = "Percentage (%)",
   y_lab = "SIMD decile",
-  bar_colour = "#19AB19"
+  bar_colour = quality_colour
   )+
   geom_errorbar(
     aes(
@@ -419,7 +410,7 @@ overall_care_scotland_by_urban_barchart <- make_barchart_multiple_groups(
   ), 
   y_lab = "", 
   x_lab = "Percentage (%)",
-  bar_colour = "#19AB19"
+  bar_colour = quality_colour
   )+
   geom_errorbar(
     aes(
@@ -458,8 +449,8 @@ overall_care_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
     width = 60
   ), 
   x_lab = "Percentage (%)",
-  y_lab = "Experienced chronic pain?", 
-  bar_colour = "#19AB19"
+  y_lab = "Chronic pain?", 
+  bar_colour = quality_colour
   )+
   geom_errorbar(
     aes(
@@ -477,7 +468,7 @@ overall_care_scotland_by_chronic_pain_barchart <- make_barchart_multiple_groups(
   )
 
 overall_care_scotland_by_chronic_pain_barchart
-save_plot_with_script_name(overall_care_scotland_by_chronic_pain_barchart,width = 15,height = 3)
+save_plot_with_script_name(overall_care_scotland_by_chronic_pain_barchart,width = 15,height = 4.5, show_title = FALSE)
 
 ##  Barchart by Long term condition ##
 overall_care_scotland_by_long_term <- `Long-Term Condition` %>% 
@@ -556,7 +547,7 @@ overall_care_scotland_by_sexual_orientation_barchart <- make_barchart_multiple_g
   ), 
   x_lab = "Percentage (%)",
   y_lab = "Sexual orientation", 
-  bar_colour = "#19AB19"
+  bar_colour = quality_colour
   )+
   geom_errorbar(
     aes(
@@ -713,7 +704,7 @@ overall_care_scotland_timeseries_barchart <- make_barchart_multiple_groups(
     limits = c(0, 100),
     breaks = seq(0, 100, 10)
   )+
-  geom_col(fill = "#19AB19")+
+  geom_col(fill = quality_colour)+
   geom_text(
     aes(label = paste0(round(Percentage, 0), "%")),
     vjust = 2,
@@ -732,10 +723,10 @@ overall_care_scotland_timeseries_line <- make_scatter(
   y_lab = "Percentage (%)",
   x_lab = "Year"
   )+
-  geom_line(colour = "#19AB19",
+  geom_line(colour = quality_colour,
             aes(group = 2), 
             linewidth = 2, ) +
-  geom_point(size = 4, colour = "#19AB19")+
+  geom_point(size = 4, colour = quality_colour)+
   geom_text(
     aes(
       label = paste0(round(Percentage, 0), "%")),
@@ -746,19 +737,44 @@ overall_care_scotland_timeseries_line
 save_plot_with_script_name(overall_care_scotland_timeseries_line)
 
 #------------## Overall care variation by HSCP  analysis ##--------------------#
+#This creates a list of the overall care % positive broken down by HSCP, cluster and practice name. 
 overall_care_variation_by_GP <- variation_data_2025 %>%
   filter(
     `Question Number` == "q13",
     `Response Option` =="positive"
   ) %>%
-  group_by(hscp_name, `GP Practice name`) %>%
+  group_by(hscp_name, hscp_gpcl_name, `GP Practice name`) %>%
   summarise(
     overall_care_percentage = sum(Percentage, na.rm = TRUE),
     .groups = "drop"
   )
 
+## Summary by HSCP to chose a HSCP with large enough number of clusters to analyse
 overall_care_variation_by_hscp <- overall_care_variation_by_GP %>%
   group_by(hscp_name) %>%
+  summarise(
+    num_practices = n(),
+    num_clusters = n_distinct(hscp_gpcl_name),
+    sd_pct = sd(overall_care_percentage, na.rm = TRUE),
+    min_pct = min(overall_care_percentage, na.rm = TRUE),
+    max_pct = max(overall_care_percentage, na.rm = TRUE),
+    range_pct = max_pct - min_pct,
+    .groups = "drop"
+  ) %>%
+  arrange(desc(sd_pct))
+
+largest_hscp_by_clusters <- overall_care_variation_by_hscp %>%
+  arrange(desc(num_clusters), desc(num_practices)) %>%
+  slice_head(n = 5)
+## This will extract the chosen HSCP based on highest number of clusters and individual practices
+chosen_hscp <- largest_hscp_by_clusters %>% 
+  slice_head(n = 1) %>% 
+  pull(hscp_name)
+
+# Get summary stats for the chosen HSCP
+overall_care_variation_by_cluster <- overall_care_variation_by_GP %>%
+  filter(hscp_name == chosen_hscp) %>% 
+  group_by(hscp_gpcl_name) %>% 
   summarise(
     num_practices = n(),
     sd_pct = sd(overall_care_percentage, na.rm = TRUE),
@@ -769,85 +785,75 @@ overall_care_variation_by_hscp <- overall_care_variation_by_GP %>%
   ) %>%
   arrange(desc(sd_pct))
 
+# What clusters in the HSCP have the largest SD
+top_sd <- overall_care_variation_by_cluster %>%
+  arrange(desc(sd_pct)) %>%
+  slice_head(n = 5)
+# What clusters in the HSCP have the largest range
+top_range <- overall_care_variation_by_cluster %>%
+  filter(!hscp_gpcl_name %in% top_sd$hscp_gpcl_name) %>%
+  arrange(desc(range_pct)) %>%
+  slice_head(n = 3)
 
-overall_care_variation_tails <- bind_rows(
-  Top5 = overall_care_variation_by_hscp %>%
-    filter(num_practices > 15) %>%
-    slice_head(n = 2),
-  Bottom5 = overall_care_variation_by_hscp %>% 
-    filter(num_practices > 15) %>%
-    slice_tail(n = 2),
+overall_care_cluster_variation_tails <- bind_rows(
+  sd5 = top_sd,
+  range5 = top_range,
   .id = "Group"
-  ) %>%
-  pull(hscp_name)
+) %>%
+  pull(hscp_gpcl_name)
+overall_care_cluster_variation_tails
 
-
-ggplot(
-  overall_care_variation_by_GP %>%
-    filter(hscp_name %in% overall_care_variation_tails),
-  aes(x = reorder(hscp_name, overall_care_percentage),
-      y = overall_care_percentage)
-) +
-  geom_boxplot(outlier.shape = NA, fill = "lightgrey") +
-  coord_flip() +
-  labs(
-    title = "overall care: Top 5 and Bottom 5 HSCPs by variation",
-    x = "HSCP",
-    y = "% positive"
-  ) +
-  theme_minimal()
-
-chosen_overall_care_variation_by_hscp <- overall_care_variation_by_GP %>%
+#Plot a combinition of the most varied clusters 
+plot_data <- overall_care_variation_by_GP %>%
   filter(
-    hscp_name %in% overall_care_variation_tails
+    hscp_name == chosen_hscp,
+    hscp_gpcl_name %in% overall_care_cluster_variation_tails
+  ) %>%
+  mutate(
+    cluster_label = paste(
+      "GP Cluster",
+      as.integer(factor(hscp_gpcl_name))
+    )
   )
 
-
-chosen_overall_care_variation_by_hscp_plot <- ggplot(
-  chosen_overall_care_variation_by_hscp, 
-  aes(x = reorder(hscp_name, overall_care_percentage), y = overall_care_percentage)) +
-  geom_jitter(
-    aes(colour = hscp_name),
-    width = 0.4, height = 0,
-    size = 3, alpha = 0.75
-  ) +
-  scale_y_continuous(limits = c(0,100))+
-  labs(
-    title = "% rating overall care positive by GP Practice, grouped by HSCP",
-    x = "HSCP",
-    y = "% positive"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 0)
+plot <- ggplot(
+  plot_data,
+  aes(
+    x = cluster_label,
+    y = overall_care_percentage,
+    colour = cluster_label,
+    shape = cluster_label
   )
-chosen_overall_care_variation_by_hscp_plot <- ggplot(
-  data = chosen_overall_care_variation_by_hscp, 
-  aes(x = reorder(hscp_name, overall_care_percentage), 
-      y = overall_care_percentage)
 ) +
   geom_jitter(
-    aes(colour = hscp_name),
-    width = 0.4, height = 0,
-    size = 3, alpha = 0.75
+    width = 0.25,
+    height = 0,
+    size = 3
   ) +
-scale_y_continuous(limits = c(0,100))+
+  scale_y_continuous(limits = c(0, 100)) +
+  scale_shape_manual(
+    values = c(16, 17, 15, 18, 3, 4, 8, 7, 9, 10)
+  ) +
   labs(
-    title = "% positive about the overall care provided by their GP by GP Practice, grouped by HSCP",
-    x = "HSCP",
-    y = "Percentage (%)"
+    title = "Variation of the positive overall care ratings for individual GP Practices within a HSCP, grouped by GP Clusters",
+    x = "",
+    y = "Percentage of respondents rating their overall care positively (%)",
+    caption = paste(
+      "Note: Each point represents an individual GP practice.",
+      "Different colours and shapes are used to distinguish GP clusters.",
+      "All GP clusters included in this chart belong to the same HSCP."
+    )
   ) +
-  theme_minimal() +
+  theme_minimal(base_size = 12) +
   theme(
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    legend.position = "none"
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "none",
+    plot.caption = element_text(hjust = 0, size = 12)
   )
+plot
+save_plot_with_script_name(plot, width = 29,height =15 ,show_title = TRUE)
 
-chosen_overall_care_variation_by_hscp_plot
-save_plot_with_script_name(chosen_overall_care_variation_by_hscp_plot)
-
-#------------## Overall care variation by GP Cluster  analysis ##--------------------#
+#------------## Overall care variation by GP Cluster analysis ##--------------------#
 overall_care_variation_by_GP <- variation_data_2025 %>%
   filter(
     `Question Number` == "q13",
@@ -935,11 +941,11 @@ save_plot_with_script_name(chosen_overall_care_variation_by_cluster_plot)
 ##----------------------------------------------------------------------------#
 ################################################################################
 # Exploratory plots
-# #Scatterplot by GP practice
+#Scatterplot by GP practice
 # overall_care_GP_scatterplot <- make_scatter(
 #   data = overall_care_GP,
-#   x_var = order, 
-#   y_var = percentage_overall_care_GP, 
+#   x_var = order,
+#   y_var = percentage_overall_care_GP,
 #   title = str_wrap(
 #     "The percentage of respondents who rated the overall care from their General Practice as positive by GP practice",
 #     width = 60
@@ -1015,8 +1021,8 @@ save_plot_with_script_name(chosen_overall_care_variation_by_cluster_plot)
 # #Scatterplot by GP cluster
 # overall_care_cluster_scatterplot <- make_scatter(
 #   data = overall_care_cluster,
-#   x_var = order, 
-#   y_var = percentage_overall_care_cluster, 
+#   x_var = order,
+#   y_var = percentage_overall_care_cluster,
 #   title = str_wrap(
 #     "The percentage of respondents who rated the overall care from their General Practice as positive by GP cluster",
 #     width = 60
