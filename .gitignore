@@ -5,6 +5,7 @@
 
 # 'data' folder #
 data/
+Data Processing/
 
 # Common text files that may contain data #
 *.[cC][sS][vV]
