@@ -9,8 +9,6 @@ Data Processing/
 *.[cC][sS][vV]
 *.[tT][xX][tT]
 
-# Excel files #
-*.[xX][lL][sS]*
 
 # SPSS formats #
 *.[sS][aA][vV]
@@ -24,7 +22,6 @@ rsconnect/
 .Rproj.user
 .Rhistory
 .Ruserdata
-*.xlsx
 *.ods
 *.rda
 *.sas7bdat
