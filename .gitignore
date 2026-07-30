@@ -1,7 +1,7 @@
 .Rproj.user
 .Rhistory
 .Ruserdata
-
+.RData
 
 # Common text files that may contain data #
 *.[cC][sS][vV]
