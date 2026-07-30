@@ -18,3 +18,19 @@
 # # Run all scripts - this will run them in the order of the above list
 # lapply(RunScripts, source)
 # 
+
+
+scripts <- c(
+  "1. Utility.R",
+  "GP - Overall care.R",
+  "GP - Ease of contacting.R",
+  "GP - Informed choice.R",
+  "Out of Hours - treatment.R"
+)
+
+for (script in scripts) {
+  message("Running: ", script)
+  source(script)
+}
+
+message("All scripts completed.")
