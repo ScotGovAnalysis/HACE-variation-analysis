@@ -2,8 +2,6 @@
 .Rhistory
 .Ruserdata
 
-# 'data processing' folder #
-Data Processing/
 
 # Common text files that may contain data #
 *.[cC][sS][vV]
