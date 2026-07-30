@@ -1,10 +1,8 @@
 .Rproj.user
 .Rhistory
-.RData
 .Ruserdata
 
-# 'data' folder #
-data/
+# 'data processing' folder #
 Data Processing/
 
 # Common text files that may contain data #
@@ -20,16 +18,11 @@ Data Processing/
 # SAS format #
 *.[sS][aA][sS]7[bB][dD][aA][tT]
 
-# R data files #
-*.[rR][dD][aA][tT][aA]
-*.[rR][dD][sS]
-
 # RStudio Connect folder
 rsconnect/
 
 .Rproj.user
 .Rhistory
-.RData
 .Ruserdata
 *.xlsx
 *.ods
@@ -38,4 +31,3 @@ rsconnect/
 *.csv
 *.tsv
 *.svg
-*.rds
