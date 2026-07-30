@@ -136,21 +136,24 @@ add_year <- function(title_text) {
 # Function that will create folders for the plots using each individual script name 
 # and save them to the working directory. It then saves the plot using the title of
 # the plot as the name, and any specified width and height measurements in cm.  
-save_plot_with_script_name <- function(plot,
-                                       width = 20,
-                                       height = 12,
-                                       show_title = TRUE) {
+save_plot_with_script_name <- function(
+    plot,
+    width = 20,
+    height = 12,
+    show_title = TRUE
+) {
   
   script_path <- rstudioapi::getActiveDocumentContext()$path
   script_name <- tools::file_path_sans_ext(basename(script_path))
   
   folder_name <- paste0(script_name, " Plots")
-  dir.create(folder_name, showWarnings = FALSE)
+  
+  dir.create(folder_name,showWarnings = FALSE)
   
   plot_title <- plot$labels$title
   
-  geom_classes <- sapply(plot$layers, function(x) class(x$geom)[1])
-  
+  geom_classes <- sapply(plot$layers,function(x) class(x$geom)[1]
+                         )
   plot_type <- if (any(grepl("GeomBoxplot", geom_classes))) {
     "Box plot of"
   } else if ("GeomViolin" %in% geom_classes) {
@@ -170,12 +173,11 @@ save_plot_with_script_name <- function(plot,
   full_title <- paste(plot_type, plot_title)
   safe_title <- gsub("[^A-Za-z0-9]", " ", full_title)
   
-  # Remove title from saved version if requested
   plot_to_save <- if (show_title) {
     
     wrapped_title <- stringr::str_wrap(
       plot$labels$title,
-      width = 60
+      width = 120
     )
     
     plot +
@@ -197,7 +199,8 @@ save_plot_with_script_name <- function(plot,
   }
   
   ggsave(
-    filename = file.path(folder_name, paste0(safe_title, ".svg")),
+    filename = file.path(folder_name, paste0(safe_title, ".svg")
+    ),
     plot = plot_to_save,
     width = width,
     height = height,
@@ -205,7 +208,9 @@ save_plot_with_script_name <- function(plot,
   )
   
   print(geom_classes)
+  
 }
+
 
 # Functions for creating various chart types.
 make_histogram <- function(data, 
