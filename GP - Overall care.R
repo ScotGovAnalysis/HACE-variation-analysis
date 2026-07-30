@@ -14,7 +14,7 @@
 
 ## Core value
 # Quality – We get the care we need
-
+script_name <- "GP - Overall care.R"
 #------------------------------------------------------------------------------#
 # Summary table showing the percentage of respondents who rated the overall care 
 # from their General Practice as positive (“Excellent” or “Good”)
