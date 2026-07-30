@@ -1,5 +1,9 @@
+#==============================================================================
 ## Utility Script ##
-# Download the most recent publication tables from https://www.gov.scot/collections/health-and-care-experience-survey/ #
+#==============================================================================
+
+## Each year run the updates script first to include the new years data. Once you
+## have run that, you can run the rest of the code.
 
 #Load required packages#
 library(readxl)
@@ -8,36 +12,133 @@ library(dplyr)
 library(tidyverse)
 library(sgplot)
 library(ggplot2)
+library(stringr)
 
-# File path to the most recent years data #
-# TO BE UPDATED WHEN STORAGE LOCATION DECIDED #
-file_path_demographics <- "Setup documents - to be deleted once storage location decided/HACE+2025+-+2026+-+All+results+by+Demographic+Characteristic.xlsx"
-file_path_geographies_2025 <- "Setup documents - to be deleted once storage location decided/HACE+2025+-+2026+-+All+results+by+Geography.xlsx"
-file_path_geographies_2023 <- "Setup documents - to be deleted once storage location decided/Health+and+Care+Experience+Survey+2023+to+2024+-tables+of+results+by+geography.xlsx"
-file_path_geographies_2021 <- "Setup documents - to be deleted once storage location decided/combined-pnn-info-questions-updated-25-10-22 (1).xlsx"
 
+#If you have not run the Updates script manually set survey year
+# survey_year <- "2027-28"
+current_survey_year <- survey_year
+
+#Read in master data set
+master_data_all <- readRDS("Clean data/master_data_all.rds")
 # Read in lookup data set to determine what practices sit in each cluster in which hscp etc
-SG_Practice_lookup <- readRDS("~/HSCA/HACE-variation-analysis/Setup documents - to be deleted once storage location decided/SG_Practice_lookup.rds")
-
-# Vector of all responses considered as urgent access
-within_2_days_responses <- c(
-  "I saw or spoke to a doctor or nurse on the same day",
-  "I saw or spoke to a doctor or nurse within 1 or 2 working days"
-)
+SG_Practice_lookup <- readRDS("~/HSCA/HACE/HACE-variation-analysis/Clean data/SG_Practice_lookup.rds")
 
 # SG Core value colors for slide pack
 access_colour <- "#F46A25"
 quality_colour <- "#19AB19"
 person_centered_colour <- "#D071A7"
 
+#Bands for binned barcharts
+bands <- paste0(seq(0, 90, 10), "-", seq(10, 100, 10))
 
+## Question lookup function
+question_lookup_year <- readRDS(
+  "Clean data/question_lookup_year.rds"
+)
+
+question_easy_contact <- question_lookup_year %>%
+  filter(
+    question_type == "easy_contact",
+    survey_year == current_survey_year
+  ) %>%
+  pull(question_number)
+
+question_overall_care <- question_lookup_year %>%
+  filter(
+    question_type == "overall_care",
+    survey_year == current_survey_year
+  ) %>%
+  pull(question_number)
+
+question_informed_choice <- question_lookup_year %>%
+  filter(
+    question_type == "informed_choice",
+    survey_year == current_survey_year
+  ) %>%
+  pull(question_number)
+
+question_OOH_care <- question_lookup_year %>%
+  filter(
+    question_type == "OOH_care",
+    survey_year == current_survey_year
+  ) %>%
+  pull(question_number)
+
+question_lookup <- list(
+  easy_contact = question_lookup_year %>%
+    filter(question_type == "easy_contact") %>%
+    pull(question_number) %>%
+    unique(),
+  
+  overall_care = question_lookup_year %>%
+    filter(question_type == "overall_care") %>%
+    pull(question_number) %>%
+    unique(),
+  
+  informed_choice = question_lookup_year %>%
+    filter(question_type == "informed_choice") %>%
+    pull(question_number) %>%
+    unique(),
+  
+  OOH_care = question_lookup_year %>%
+    filter(question_type == "OOH_care") %>%
+    pull(question_number) %>%
+    unique()
+)
+
+master_total <- master_data_all %>%
+  filter(
+    Year == current_survey_year,
+    Sex == "Total",
+    `Age Band` == "Total",
+    SIMD == "Total",
+    `Urban-Rural 8` == "Total",
+    `Long-Term Condition` == "Total",
+    `Chronic Pain` == "Total",
+    `Sexual Orientation` == "Total",
+    Ethnicity == "Total"
+  )
+
+master_demographics <- master_data_all %>%
+  filter(
+    Year == current_survey_year,
+    Area == "Scotland"
+  )
+
+variation_data <- master_total %>%
+  filter(
+    Year == current_survey_year,
+    `Area Type` == "GP Practice") %>%
+  left_join(
+    SG_Practice_lookup,
+    by = c("Area" = "gp_name_letter")
+  ) %>%
+  select(
+    Year,`Question Number`,Topic,`Question Text`,`Response Option`,`Area Type`,
+    hb_code,hb_name,ca_code,hscp_gpcl_name,hscp_code,hscp_name,gp_prac_no,
+    gp_name_official,practicelistsize,Area,`Number of Responses`,Percentage,
+    `Lower 95% Confidence Interval`,`Upper 95% Confidence Interval`
+  )
+
+numeric_cols <- c(
+  "Number of Responses",
+  "Percentage",
+  "Lower 95% Confidence Interval",
+  "Upper 95% Confidence Interval"
+)
+
+#add year to title function
+add_year <- function(title_text) {
+  paste0(title_text, ", ", current_survey_year)
+}
 
 # Function that will create folders for the plots using each individual script name 
 # and save them to the working directory. It then saves the plot using the title of
 # the plot as the name, and any specified width and height measurements in cm.  
 save_plot_with_script_name <- function(plot,
-                                       width = 15,
-                                       height = 8,
+                                       width = 20,
+                                       height = 12,
                                        show_title = TRUE) {
   
   script_path <- rstudioapi::getActiveDocumentContext()$path
@@ -71,7 +172,26 @@ save_plot_with_script_name <- function(plot,
   
   # Remove title from saved version if requested
   plot_to_save <- if (show_title) {
-    plot
+    
+    wrapped_title <- stringr::str_wrap(
+      plot$labels$title,
+      width = 60
+    )
+    
+    plot +
+      labs(
+        title = stringr::str_wrap(
+          plot$labels$title,
+          width = 120
+        )
+      ) +
+      theme(
+        plot.title.position = "plot",
+        plot.title = element_text(
+          hjust = 0
+        )
+      )
+    
   } else {
     plot + labs(title = NULL)
   }
@@ -168,6 +288,17 @@ make_scatter <- function(data, x_var, y_var, title,
                               x_lab = x_lab,
                               y_lab = y_lab) {
   
+  title <- paste0(
+    title,
+    ", ",
+    current_survey_year
+  )
+  
+  title <- stringr::str_wrap(
+    title,
+    width = 120
+  )
+  
   ggplot(data, aes(x = {{x_var}}, y = {{y_var}})) +
     geom_point(size = 2.5) +
     scale_y_continuous(limits = c(0, 100)) +
@@ -192,22 +323,98 @@ make_barchart_multiple_groups <- function(
     y_lab = NULL,
     bar_width = 0.75,
     bar_colour = "#0b4c0b"
-    ) {
+) {
+  
+  title <- paste0(
+    title,
+    ", ",
+    current_survey_year
+  )
+  
+  title <- stringr::str_wrap(
+    title,
+    width = 120
+  )
   
   ggplot(data, aes(x = {{x_var}}, y = {{y_var}})) +
-    geom_col(fill = bar_colour,
-             width = bar_width) +
+    geom_col(
+      fill = bar_colour,
+      width = bar_width
+    ) +
     scale_x_discrete(drop = FALSE) +
     labs(
       title = title,
       x = x_lab,
       y = y_lab
     ) +
+    theme_minimal(base_size = 12) +
     theme(
-      plot.title = element_text(hjust = 0.5),
+      plot.title.position = "plot",
+      plot.title = element_text(
+        hjust = 0.5,
+        margin = margin(b = 10)
+      ),
+      plot.margin = margin(
+        t = 20,
+        r = 20,
+        b = 10,
+        l = 10
+      ),
       axis.title.y = element_text(angle = 90),
       legend.position = "none"
-    )+
-    theme_minimal(base_size = 12)
+    )
 }
 
+make_jitter_plot <- function(
+    data,
+    x_var,
+    y_var,
+    title,
+    x_lab = NULL,
+    y_lab = NULL,
+    colour_var = NULL,
+    shape_var = NULL
+) {
+  
+  title <- paste0(
+    title,
+    ", ",
+    current_survey_year
+  )
+  
+  ggplot(
+    data,
+    aes(
+      x = {{x_var}},
+      y = {{y_var}},
+      colour = {{colour_var}},
+      shape = {{shape_var}}
+    )
+  ) +
+    geom_jitter(
+      width = 0.25,
+      height = 0,
+      size = 3
+    ) +
+    scale_y_continuous(limits = c(0, 100)) +
+    labs(
+      title = title,
+      x = x_lab,
+      y = y_lab
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title.position = "plot",
+      plot.title = element_text(
+        hjust = 0,
+        margin = margin(b = 10)
+      ),
+      plot.margin = margin(
+        t = 20,
+        r = 20,
+        b = 10,
+        l = 10
+      ),
+      legend.position = "none"
+    )
+}
