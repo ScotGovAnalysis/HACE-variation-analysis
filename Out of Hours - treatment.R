@@ -15,7 +15,7 @@
 
 ## Core value
 # Person-centered – delivering outcomes that matter to people
-
+SCRIPT_NAME <- "Out of Hours - treatment"
 #------------------------------------------------------------------------------#
 OOH_care_scotland <- master_total %>%
   filter(

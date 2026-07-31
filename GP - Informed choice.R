@@ -15,7 +15,7 @@
 
 ## Core value
 # Person-centered – delivering outcomes that matter to people
-
+SCRIPT_NAME <- "GP - Informed choice"
 #------------------------------------------------------------------------------#
 informed_choice_scotland <- master_total %>%
   filter(

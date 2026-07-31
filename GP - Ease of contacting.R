@@ -14,7 +14,7 @@
 
 ## Core value
 # Access – Care at the right time and in the right place
-
+SCRIPT_NAME <- "GP - Ease of contacting"
 #------------------------------------------------------------------------------#
 #The percentage of respondents who rated the Ease of contacting their General 
 # Practice as positive for Scotland for current survey year
