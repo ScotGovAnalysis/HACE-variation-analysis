@@ -1,6 +1,7 @@
 #==============================================================================
 ## Utility Script ##
 #==============================================================================
+SCRIPT_NAME <- "1. Utility"
 
 ## Each year run the updates script first to include the new years data. Once you
 ## have run that, you can run the rest of the code.
@@ -16,7 +17,7 @@ library(stringr)
 
 
 #If you have not run the Updates script manually set survey year
-# survey_year <- "2027-28"
+survey_year <- "2025-26"
 current_survey_year <- survey_year
 
 #Read in master data set
@@ -143,8 +144,9 @@ save_plot_with_script_name <- function(
     show_title = TRUE
 ) {
   
-  script_path <- rstudioapi::getActiveDocumentContext()$path
-  script_name <- tools::file_path_sans_ext(basename(script_path))
+  script_name <- get("SCRIPT_NAME", envir = .GlobalEnv)
+  # script_path <- rstudioapi::getActiveDocumentContext()$path
+  # script_name <- tools::file_path_sans_ext(basename(script_path))
   
   folder_name <- paste0(script_name, " Plots")
   
@@ -175,11 +177,6 @@ save_plot_with_script_name <- function(
   
   plot_to_save <- if (show_title) {
     
-    wrapped_title <- stringr::str_wrap(
-      plot$labels$title,
-      width = 120
-    )
-    
     plot +
       labs(
         title = stringr::str_wrap(
@@ -190,7 +187,7 @@ save_plot_with_script_name <- function(
       theme(
         plot.title.position = "plot",
         plot.title = element_text(
-          hjust = 0
+          hjust = 0.15
         )
       )
     
@@ -206,8 +203,6 @@ save_plot_with_script_name <- function(
     height = height,
     units = "cm"
   )
-  
-  print(geom_classes)
   
 }
 
@@ -338,7 +333,7 @@ make_barchart_multiple_groups <- function(
   
   title <- stringr::str_wrap(
     title,
-    width = 120
+    width = 80
   )
   
   ggplot(data, aes(x = {{x_var}}, y = {{y_var}})) +
