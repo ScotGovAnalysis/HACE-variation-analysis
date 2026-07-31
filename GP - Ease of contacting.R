@@ -581,9 +581,9 @@ easy_contact_variation_by_GP_Cluster_and_HSCP_plot <-
   )
 easy_contact_variation_by_GP_Cluster_and_HSCP_plot
 #save_plot_with_script_name(easy_contact_variation_by_GP_Cluster_and_HSCP_plot, width = 29, height =15 ,show_title = TRUE)
-
+SCRIPT_NAME <- "GP - Ease of contacting"
 #Save plots
-save_plot_with_script_name(easy_contact_GP_barchart)
+save_plot_with_script_name(easy_contact_GP_barchart, width = 26, height =13)
 save_plot_with_script_name(easy_contact_HSCP_barchart)
 save_plot_with_script_name(easy_contact_scotland_by_sex_barchart)
 save_plot_with_script_name(easy_contact_scotland_by_age_barchart)

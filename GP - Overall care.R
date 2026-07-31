@@ -86,7 +86,7 @@ overall_care_GP_barchart <- make_barchart_multiple_groups(
   x_lab = "Percentage (%)",
   y_lab = "Number of GP practices",
   bar_colour = quality_colour
-)+
+  )+
   geom_text(
     aes(
       label = round(n_practices, 0),
@@ -99,9 +99,12 @@ overall_care_GP_barchart <- make_barchart_multiple_groups(
   scale_colour_manual(
     values = c("FALSE" = "white",
                "TRUE" = "black")
+  )+
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.05))
   )
 overall_care_GP_barchart
-#save_plot_with_script_name(overall_care_GP_barchart)
+# save_plot_with_script_name(overall_care_GP_barchart)
 
 ################################################################################
 #Geographical variation 
@@ -585,9 +588,9 @@ overall_care_variation_by_GP_Cluster_and_HSCP_plot
 #save_plot_with_script_name(overall_care_variation_by_GP_Cluster_and_HSCP_plot, width = 29,height =15 ,show_title = TRUE)
 
 ################################################################################
-
+SCRIPT_NAME <- "GP - Overall care"
 # Save plots
-save_plot_with_script_name(overall_care_GP_barchart)
+save_plot_with_script_name(overall_care_GP_barchart, width = 26, height =13)
 save_plot_with_script_name(overall_care_HSCP_barchart)
 save_plot_with_script_name(overall_care_scotland_by_sex_barchart)
 save_plot_with_script_name(overall_care_scotland_by_age_barchart)
@@ -598,5 +601,5 @@ save_plot_with_script_name(overall_care_scotland_by_long_term_barchart)
 save_plot_with_script_name(overall_care_scotland_by_sexual_orientation_barchart)
 save_plot_with_script_name(overall_care_scotland_by_ethnicity_barchart)
 save_plot_with_script_name(overall_care_scotland_timeseries_scatter)
-save_plot_with_script_name(overall_care_variation_by_GP_Cluster_and_HSCP_plot, width = 29, height =15 ,show_title = TRUE)
+save_plot_with_script_name(overall_care_variation_by_GP_Cluster_and_HSCP_plot, width = 29, height =15)
 
