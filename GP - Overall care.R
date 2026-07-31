@@ -99,10 +99,8 @@ overall_care_GP_barchart <- make_barchart_multiple_groups(
   scale_colour_manual(
     values = c("FALSE" = "white",
                "TRUE" = "black")
-  )+
-  scale_y_continuous(
-    expand = expansion(mult = c(0, 0.05))
   )
+
 overall_care_GP_barchart
 # save_plot_with_script_name(overall_care_GP_barchart)
 
