@@ -1,3 +1,5 @@
+# Location of desk instructions:
+# \\scotland.gov.uk\dc1\DCGroup_SA1\Dept. of Health\Linked Spreadsheets\Analytical Services (HD)\Sitrep Returns\Primary Care\HACE
 library(readxl)
 library(dplyr)
 library(writexl)
