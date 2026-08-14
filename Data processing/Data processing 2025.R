@@ -630,14 +630,14 @@ master_data_all <- bind_rows(
 ## Save the master data as an RDS
 saveRDS(
   master_data_all,
-  "Data/master_data_all.rds"
+  "Clean data/master_data_all.rds"
 )
 
 # Save a back up dated with this survey year incase other master gets corrupted
 saveRDS(
   master_data_all,
   paste0(
-    "Data/master_data_all_",
+    "Clean data/master_data_all_",
     gsub("-", "_", survey_year),
     ".rds"
   )
@@ -646,43 +646,33 @@ saveRDS(
 ## Optional save as excel file to inspect/QA
 write_xlsx(
   master_data_all,
-  "Data/master_data_all.xlsx"
+  "Clean data/master_data_all.xlsx"
 )
 ##==============================================================================
 
-question_lookup_year <- tibble::tribble(
-  ~question_type,      ~survey_year, ~question_number,
-  
-  "easy_contact",      "2017-18",    "03",
-  "easy_contact",      "2019-20",    "03",
-  "easy_contact",      "2021-22",    "3",
-  "easy_contact",      "2023-24",    "q03",
-  "easy_contact",      "2025-26",    "q03",
-  
-  "overall_care",      "2009-11",    "10",
-  "overall_care",      "2011-12",    "10",
-  "overall_care",      "2013-14",    "10",
-  "overall_care",      "2015-16",    "10",
-  "overall_care",      "2017-18",    "10",
-  "overall_care",      "2019-20",    "10",
-  "overall_care",      "2021-22",    "10",
-  "overall_care",      "2023-24",    "q13",
-  "overall_care",      "2025-26",    "q13",
-  
-  "informed_choice",   "2021-22",    "13l",
-  "informed_choice",   "2023-24",    "q16m",
-  "informed_choice",   "2025-26",    "q16m",
-  
-  "OOH_care",          "2017-18",    "20",
-  "OOH_care",          "2019-20",    "20",
-  "OOH_care",          "2021-22",    "26c",
-  "OOH_care",          "2023-24",    "q24c",
-  "OOH_care",          "2025-26",    "q24c"
-)
-
-saveRDS(
-  question_lookup_year,
-  "Clean data/question_lookup_year.rds"
-)
 
 
+### Additional manual rows 11/08/2026
+manual_rows <- data.frame(
+  "Year" = c("2017-18", "2019-20", "2021-22"),
+  "Question Number" = c("q22", "q21","q27"),
+  "Topic" = rep("Out of Hours Healthcare", 3),
+  "Question Text" = rep("Overall, how would you rate the care you experienced from this service?", 3),
+  "Response Option" = rep("positive", 3),
+  "Area Type" = rep("Country", 3),
+  "Area" = rep("Scotland", 3),
+  "Sex" = rep("Total", 3),
+  "Age Band" = rep("Total", 3),
+  "SIMD" = rep("Total", 3),
+  "Urban-Rural 8" = rep("Total", 3),
+  "Long-Term Condition" = rep("Total", 3),
+  "Chronic Pain" = rep("Total", 3),
+  "Sexual Orientation" = rep("Total", 3),
+  "Ethnicity" = rep("Total", 3),
+  "Number of Responses" = rep(NA, 3),
+  "Percentage" = c(83, 79, 67),
+  "Lower 95% Confidence Interval" = rep(NA, 3),
+  "Upper 95% Confidence Interval" = rep(NA, 3),
+  check.names = FALSE
+  )
+master_data_all <- dplyr::bind_rows(master_data_all, manual_rows)
