@@ -66,6 +66,13 @@ question_OOH_care <- question_lookup_year %>%
   ) %>%
   pull(question_number)
 
+question_OOH_overall_care <- question_lookup_year %>%
+  filter(
+    question_type == "OOH_overall_care",
+    survey_year == current_survey_year
+  ) %>%
+  pull(question_number)
+
 question_lookup <- list(
   easy_contact = question_lookup_year %>%
     filter(question_type == "easy_contact") %>%
@@ -84,6 +91,11 @@ question_lookup <- list(
   
   OOH_care = question_lookup_year %>%
     filter(question_type == "OOH_care") %>%
+    pull(question_number) %>%
+    unique(),
+  
+  OOH_overall_care = question_lookup_year %>%
+    filter(question_type == "OOH_overall_care") %>%
     pull(question_number) %>%
     unique()
 )
