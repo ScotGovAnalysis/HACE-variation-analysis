@@ -12,7 +12,9 @@ scripts <- c(
   "GP - Overall care.R",
   "GP - Ease of contacting.R",
   "GP - Informed choice.R",
-  "Out of Hours - treatment.R"
+  "Out of Hours - treatment.R",
+  "OOH - Overall care.R",
+  "Help Care Support - Overall care.R"
 )
 
 for (script in scripts) {
