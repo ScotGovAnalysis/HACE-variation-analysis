@@ -23,7 +23,7 @@ current_survey_year <- survey_year
 #Read in master data set
 master_data_all <- readRDS("Clean data/master_data_all.rds")
 # Read in lookup data set to determine what practices sit in each cluster in which hscp etc
-SG_Practice_lookup <- readRDS("~/HSCA/HACE/HACE-variation-analysis/Clean data/SG_Practice_lookup.rds")
+SG_Practice_lookup <- readRDS("G:/Dept. of Health/Linked Spreadsheets/Analytical Services (HD)/Sitrep Returns/Primary Care/HACE/SG_Practice_lookup.rds")
 
 # SG Core value colors for slide pack
 access_colour <- "#F46A25"
