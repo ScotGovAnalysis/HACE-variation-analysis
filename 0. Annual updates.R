@@ -1,11 +1,10 @@
-### Update these each year ##
-#==============================================================================
-# ANNUAL UPDATE SECTION
-#==============================================================================
 library(readxl)
 library(dplyr)
 library(writexl)
-
+library(purrr)
+#==============================================================================
+# ANNUAL UPDATE SECTION - update the below each year
+#==============================================================================
 survey_year <- "2025-26"
 
 # Download the most recent publication tables from https://www.gov.scot/collections/health-and-care-experience-survey/ #
@@ -18,15 +17,55 @@ question_easy_contact <- "q03" #How easy is it for you to contact your GP practi
 question_overall_care <- "q13" #Overall, how would you rate the care provided by your GP Practice?
 question_informed_choice <- "q16m" #'I felt able to make an informed choice about my treatment and care'
 question_OOH_care <- "q24c" #'I was treated with compassion and understanding' during A&E or GP Out of Hours care.
+question_OOH_overall_care <- "q25" #Overall care recieved during OOH care
+#==============================================================================
+## End of ANNUAL UPDATE SECTION
+#==============================================================================
 
 # Read current master
 master_data_all <- readRDS(
   "Clean data/master_data_all.rds"
 )
 
-#==============================================================================
 ## Question lookup saving 
-question_lookup_year <- readRDS(
+question_lookup_year <- tibble::tribble(
+  ~question_type,      ~survey_year, ~question_number,
+  
+  "easy_contact",      "2017-18",    "03",
+  "easy_contact",      "2019-20",    "03",
+  "easy_contact",      "2021-22",    "3",
+  "easy_contact",      "2023-24",    "q03",
+  "easy_contact",      "2025-26",    "q03",
+  
+  "overall_care",      "2009-11",    "10",
+  "overall_care",      "2011-12",    "10",
+  "overall_care",      "2013-14",    "10",
+  "overall_care",      "2015-16",    "10",
+  "overall_care",      "2017-18",    "10",
+  "overall_care",      "2019-20",    "10",
+  "overall_care",      "2021-22",    "10",
+  "overall_care",      "2023-24",    "q13",
+  "overall_care",      "2025-26",    "q13",
+  
+  "informed_choice",   "2021-22",    "13l",
+  "informed_choice",   "2023-24",    "q16m",
+  "informed_choice",   "2025-26",    "q16m",
+  
+  "OOH_care",          "2017-18",    "20",
+  "OOH_care",          "2019-20",    "20",
+  "OOH_care",          "2021-22",    "26c",
+  "OOH_care",          "2023-24",    "q24c",
+  "OOH_care",          "2025-26",    "q24c",  
+  
+  "OOH_overall_care",          "2017-18",    "q22",
+  "OOH_overall_care",          "2019-20",    "q21",
+  "OOH_overall_care",          "2021-22",    "q27",
+  "OOH_overall_care",          "2023-24",    "q25",
+  "OOH_overall_care",          "2025-26",    "q25"
+)
+
+saveRDS(
+  question_lookup_year,
   "Clean data/question_lookup_year.rds"
 )
 
@@ -35,14 +74,16 @@ new_question_lookup <- tibble(
     "easy_contact",
     "overall_care",
     "informed_choice",
-    "OOH_care"
+    "OOH_care",
+    "OOH_overall_care"
   ),
   survey_year = survey_year,
   question_number = c(
     question_easy_contact,
     question_overall_care,
     question_informed_choice,
-    question_OOH_care
+    question_OOH_care,
+    question_OOH_overall_care
   )
 )
 
