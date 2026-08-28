@@ -14,7 +14,7 @@ survey_year <- "2025-26"
 # Paste the URL of the new publication pages on gov.scot
 # Data by geography
 geography_url <- "https://www.gov.scot/publications/health-and-care-experience-survey-2025-to-2026-results-by-geographical-area/"
-# Data by deopgraphic
+# Data by demographic
 demographic_url <-"https://www.gov.scot/publications/health-and-care-experience-survey-2025-to-2026-all-results-by-demographic-characteristic/"
 
 
@@ -23,7 +23,7 @@ question_easy_contact <- "q03" #How easy is it for you to contact your GP practi
 question_overall_care <- "q13" #Overall, how would you rate the care provided by your GP Practice?
 question_informed_choice <- "q16m" #'I felt able to make an informed choice about my treatment and care'
 question_OOH_care <- "q24c" #'I was treated with compassion and understanding' during A&E or GP Out of Hours care.
-question_OOH_overall_care <- "q25" #Overall care recieved during OOH care
+question_OOH_overall_care <- "q25" #Overall care received during OOH care
 #==============================================================================
 ## End of ANNUAL UPDATE SECTION
 #==============================================================================
