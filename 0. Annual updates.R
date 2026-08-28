@@ -4,15 +4,19 @@ library(readxl)
 library(dplyr)
 library(writexl)
 library(purrr)
+library(rvest)
+library(stringr)
 #==============================================================================
 # ANNUAL UPDATE SECTION - update the below each year
 #==============================================================================
 survey_year <- "2025-26"
 
-# Download the most recent publication tables from https://www.gov.scot/collections/health-and-care-experience-survey/ #
-#Save them to the Raw data folder and update the file paths below#
-file_path_geographies <- "Raw data/HACE+2025+-+2026+-+All+results+by+Geography.xlsx"
-file_path_demographics <- "Raw data/HACE+2025+-+2026+-+All+results+by+Demographic+Characteristic.xlsx"
+# Paste the URL of the new publication pages on gov.scot
+# Data by geography
+geography_url <- "https://www.gov.scot/publications/health-and-care-experience-survey-2025-to-2026-results-by-geographical-area/"
+# Data by deopgraphic
+demographic_url <-"https://www.gov.scot/publications/health-and-care-experience-survey-2025-to-2026-all-results-by-demographic-characteristic/"
+
 
 #If the question number has changed add new number here
 question_easy_contact <- "q03" #How easy is it for you to contact your GP practice in the way that you want?
@@ -27,6 +31,59 @@ question_OOH_overall_care <- "q25" #Overall care recieved during OOH care
 # Read current master
 master_data_all <- readRDS(
   "Clean data/master_data_all.rds"
+)
+
+# Download publication workbooks
+download_publication_workbook <- function(page_url, output_file) {
+  
+  page <- read_html(page_url)
+  
+  links <- page |>
+    html_elements("a") |>
+    html_attr("href") |>
+    na.omit()
+  
+  excel_url <- links |>
+    str_subset("\\.xlsx$") |>
+    dplyr::first()
+  
+  # Convert relative URL to absolute URL
+  if (!str_detect(excel_url, "^https?://")) {
+    excel_url <- paste0("https://www.gov.scot", excel_url)
+  }
+  
+  # Create folder if it doesn't exist
+  dir.create(
+    dirname(output_file),
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+  
+  download.file(
+    excel_url,
+    output_file,
+    mode = "wb"
+  )
+  
+  output_file
+}
+
+geo_file <- download_publication_workbook(
+  page_url = geography_url,
+  output_file = paste0(
+    "Raw data/HACE-Geographies-",
+    survey_year,
+    ".xlsx"
+  )
+)
+
+demo_file <- download_publication_workbook(
+  page_url = demographic_url,
+  output_file = paste0(
+    "Raw data/HACE-Demographics-",
+    survey_year,
+    ".xlsx"
+  )
 )
 
 ## Question lookup saving 
@@ -150,7 +207,7 @@ standardise_geography <- function(df) {
   df
 }
 
-geo_sheets <- excel_sheets(file_path_geographies)
+geo_sheets <- excel_sheets(geo_file)
 geo_sheets <- geo_sheets[geo_sheets != "Background"]
 
 new_geography <- map_dfr(
@@ -160,7 +217,7 @@ new_geography <- map_dfr(
     message("Processing: ", sheet)
     
     df <- read_excel(
-      file_path_geographies,
+      geo_file,
       sheet = sheet
     )
     
@@ -179,11 +236,10 @@ master_data_all <- bind_rows(
 # Function to import demographic workbook
 #==============================================================================
 
-import_demographics <- function(file_path_demographics,
-                                survey_year) {
+import_demographics <- function(demo_file, survey_year) {
   
   sex_data <- read_excel(
-    file_path_demographics,
+    demo_file,
     sheet = "Sex"
   ) %>%
     transmute(
@@ -209,7 +265,7 @@ import_demographics <- function(file_path_demographics,
     )
   
   age_band_data <- read_excel(
-    file_path_demographics,
+    demo_file,
     sheet = "Age Band"
   ) %>%
     transmute(
@@ -235,7 +291,7 @@ import_demographics <- function(file_path_demographics,
     )
   
   simd_data <- read_excel(
-    file_path_demographics,
+    demo_file,
     sheet = "SIMD"
   ) %>%
     transmute(
@@ -261,7 +317,7 @@ import_demographics <- function(file_path_demographics,
     )
   
   urban_rural_data <- read_excel(
-    file_path_demographics,
+    demo_file,
     sheet = "Urban-Rural 8"
   ) %>%
     transmute(
@@ -287,7 +343,7 @@ import_demographics <- function(file_path_demographics,
     )
   
   long_term_condition_data <- read_excel(
-    file_path_demographics,
+    demo_file,
     sheet = "Long-Term Condition"
   ) %>%
     transmute(
@@ -313,7 +369,7 @@ import_demographics <- function(file_path_demographics,
     )
   
   chronic_pain_data <- read_excel(
-    file_path_demographics,
+    demo_file,
     sheet = "Chronic Pain"
   ) %>%
     transmute(
@@ -339,7 +395,7 @@ import_demographics <- function(file_path_demographics,
     )
   
   sexual_orientation_data <- read_excel(
-    file_path_demographics,
+    demo_file,
     sheet = "Sexual Orientation"
   ) %>%
     transmute(
@@ -365,7 +421,7 @@ import_demographics <- function(file_path_demographics,
     )
   
   ethnicity_data <- read_excel(
-    file_path_demographics,
+    demo_file,
     sheet = "Ethnicity"
   ) %>%
     transmute(
@@ -405,7 +461,7 @@ import_demographics <- function(file_path_demographics,
 
 # Import new demographics
 new_demographics <- import_demographics(
-  file_path_demographics,
+  demo_file,
   survey_year
 )
 
